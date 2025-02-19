@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.hearthstonecardsbrowser.api.BattleNetApiClient
 import com.example.hearthstonecardsbrowser.api.BattleNetAuthenticator
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -39,6 +40,7 @@ import com.example.hearthstonecardsbrowser.api.CardRequest
 
 @Composable
 fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     var textFilter by remember { mutableStateOf("") }
     var classFilter by remember{ mutableStateOf("") }
     var typeFilter by remember{ mutableStateOf("") }
@@ -157,7 +159,10 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
                 .fillMaxWidth()
         ) {
 
-            Button(onClick = { loadCards(cardRequest) }){
+            Button(onClick = {
+                keyboardController?.hide()
+                loadCards(cardRequest)
+            }){
                 Text("Search")
             }
         }

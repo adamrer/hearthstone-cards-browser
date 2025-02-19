@@ -35,11 +35,161 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
 import com.example.hearthstonecardsbrowser.api.CardRequest
 
+
+
+@Composable
+fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
+    var textFilter by remember { mutableStateOf("") }
+    var classFilter by remember{ mutableStateOf("") }
+    var typeFilter by remember{ mutableStateOf("") }
+    var sortBy by remember{ mutableStateOf("") }
+    var descending by remember{ mutableStateOf(false) }
+    var page : Int = 1
+    val pageSize = 10
+
+    val cardRequest : CardRequest = CardRequest(
+        null,
+        classFilter,
+        typeFilter,
+        null,
+        textFilter,
+        null,
+        sortBy,
+        descending,
+        page,
+        pageSize)
+
+    var cards by remember { mutableStateOf<List<HearthstoneCard>?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    fun loadCards(cardRequest: CardRequest) {
+        isLoading = true
+        errorMessage = null
+
+        client.getCards(
+            cardRequest,
+            { newCards, _ ->
+                isLoading = false
+                if (newCards == null) {
+                    errorMessage = "Failed to load cards."
+                } else if (newCards.isEmpty()){
+                    errorMessage = "No cards found."
+                } else {
+                    cards = newCards
+                }
+            }
+        )
+    }
+
+
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(93, 152, 245))
+            .paddingFromBaseline(top = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+
+
+        ) {
+        Spacer(modifier = Modifier.height(50.dp))
+        Row {
+            OutlinedTextField(
+                value = textFilter,
+                onValueChange = {
+                    textFilter = it
+                },
+                label = {
+                    Text(text = "Text")
+                }
+            )
+        }
+        Row {
+            OutlinedTextField(
+                value = classFilter,
+                onValueChange = {
+                    classFilter = it
+                },
+                label = {
+                    Text(text = "Class")
+                }
+            )
+        }
+        Row {
+            Column{
+
+            }
+            OutlinedTextField(
+                value = typeFilter,
+                onValueChange = {
+                    typeFilter = it
+                },
+                label = {
+                    Text(text = "Type")
+                }
+            )
+        }
+        Row {
+            Column{
+                OutlinedTextField(
+                    value = sortBy,
+                    onValueChange = {
+                        sortBy = it
+                    },
+                    label = {
+                        Text(text = "Sort by")
+                    }
+                )
+            }
+            Column{
+                Text("DESC")
+                Checkbox(
+                    checked = descending,
+                    onCheckedChange = {descending = it}
+                )
+            }
+
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+
+            Button(onClick = { loadCards(cardRequest) }){
+                Text("Search")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when {
+            isLoading -> {
+                CircularProgressIndicator()
+            }
+            errorMessage != null -> {
+                Text(
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            cards != null -> {
+                CardGridScreen(cards!!)
+            }
+
+        }
+
+    }
+}
+
+
 @Composable
 fun CardGridScreen(cards: List<HearthstoneCard>) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2), // 2 sloupce
-        modifier = Modifier.fillMaxSize(),
+        columns = GridCells.Fixed(2),
+        modifier = Modifier.background(Color.White).fillMaxSize(),
         contentPadding = PaddingValues(8.dp)
     ) {
         items(cards) { card ->
@@ -61,14 +211,14 @@ fun CardItem(card: HearthstoneCard) {
 
             Image(
                 painter = image,
-                contentDescription = "Obrázek karty ${card.name}",
+                contentDescription = card.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp),
                 contentScale = ContentScale.Crop
             )
             Text(
-                text = card.name,
+                text = card.name.toString(),
                 modifier = Modifier.padding(8.dp),
                 style = MaterialTheme.typography.titleMedium
             )
@@ -76,120 +226,3 @@ fun CardItem(card: HearthstoneCard) {
     }
 }
 
-@Composable
-fun ShowCards(client: BattleNetApiClient, cardRequest: CardRequest) {
-    var cards = listOf<HearthstoneCard>()
-
-    client.getCards(cardRequest,
-        { newCards:List<HearthstoneCard>?, currPage:Int? ->
-            if (newCards == null){
-                // no cards
-
-            }
-            else{
-                cards = newCards
-            }
-        })
-    CardGridScreen(cards)
-}
-
-@Composable
-fun CardsPage(modifier: Modifier = Modifier) {
-    var textFilter by remember {
-        mutableStateOf("")
-    }
-    var classFilter by remember{
-        mutableStateOf("")
-    }
-    var typeFilter by remember{
-        mutableStateOf("")
-    }
-    var sortBy by remember{
-        mutableStateOf("")
-    }
-    var descending by remember{
-        mutableStateOf(false)
-    }
-    var page : Int = 0
-    val pageSize = 10
-
-    val clientId = "38254a25f2814cb4bb94ade89f3d6a6d"
-    val clientSecret = "eFrAlzvVXrELx9RY2073aam8Wz1lsrl9"
-    val auth = BattleNetAuthenticator(clientId, clientSecret)
-    val client = BattleNetApiClient(auth)
-    val cardRequest : CardRequest = CardRequest(null, classFilter, typeFilter, null, textFilter, null, sortBy, page, pageSize)
-
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(93, 152, 245))
-            .paddingFromBaseline(top = 100.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-
-
-        ) {
-        Row {
-            OutlinedTextField(
-                value = textFilter,
-                onValueChange = {
-                    textFilter = it
-                },
-                label = {
-                    Text(text = "Search by text")
-                }
-            )
-        }
-        Row {
-            OutlinedTextField(
-                value = classFilter,
-                onValueChange = {
-                    classFilter = it
-                },
-                label = {
-                    Text(text = "Search by class")
-                }
-            )
-        }
-        Row {
-            OutlinedTextField(
-                value = typeFilter,
-                onValueChange = {
-                    typeFilter = it
-                },
-                label = {
-                    Text(text = "Search by type")
-                }
-            )
-        }
-        Row {
-            OutlinedTextField(
-                value = sortBy,
-                onValueChange = {
-                    sortBy = it
-                },
-                label = {
-                    Text(text = "Sort by")
-                }
-            )
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Text("Descending")
-            Checkbox(
-                checked = descending,
-                onCheckedChange = {descending = it}
-            )
-            Button(onClick = { /*TODO*/ }){
-                Text("Search")
-            }
-        }
-
-    }
-}

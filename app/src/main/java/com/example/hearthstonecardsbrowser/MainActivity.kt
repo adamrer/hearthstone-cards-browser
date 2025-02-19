@@ -4,23 +4,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.hearthstonecardsbrowser.CardsPage
+import com.example.hearthstonecardsbrowser.api.BattleNetApiClient
+import com.example.hearthstonecardsbrowser.api.BattleNetAuthenticator
 import com.example.hearthstonecardsbrowser.ui.theme.HearthstoneCardsBrowserTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val clientId = "38254a25f2814cb4bb94ade89f3d6a6d"
+        val clientSecret = "eFrAlzvVXrELx9RY2073aam8Wz1lsrl9"
+        val auth = BattleNetAuthenticator(clientId, clientSecret)
+        val client = BattleNetApiClient(auth)
         setContent {
             HearthstoneCardsBrowserTheme {
-                CardsPage()
+                CardsPage(client, Modifier)
 
             }
         }

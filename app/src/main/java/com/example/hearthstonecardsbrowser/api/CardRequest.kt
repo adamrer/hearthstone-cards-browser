@@ -8,6 +8,7 @@ data class CardRequest (
     val textFilter: String?,
     val spellSchool: String?,
     val sort: String?,
+    val descending: Boolean?,
     val page: Int?,
     val pageSize: Int?
 )

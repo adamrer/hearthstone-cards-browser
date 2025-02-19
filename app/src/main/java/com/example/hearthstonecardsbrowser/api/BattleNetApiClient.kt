@@ -18,6 +18,7 @@ class BattleNetApiClient (
 
     private fun buildUrl(baseUrl: String, request: CardRequest): String {
         val builder = Uri.parse(baseUrl).buildUpon()
+        builder.appendQueryParameter("locale", "en_US")
         if (request.set != null){
             builder.appendQueryParameter("set", request.set)
         }
@@ -37,7 +38,16 @@ class BattleNetApiClient (
             builder.appendQueryParameter("spellSchool", request.spellSchool)
         }
         if (request.sort != null){
-            builder.appendQueryParameter("sort", request.sort)
+            var paramValue = request.sort
+            if (request.descending != null){
+                paramValue += ":"
+                paramValue += if (request.descending){
+                    "desc"
+                } else{
+                    "asc"
+                }
+            }
+            builder.appendQueryParameter("sort", paramValue)
         }
         if (request.page != null){
             builder.appendQueryParameter("page", request.page.toString())
@@ -83,22 +93,22 @@ class BattleNetApiClient (
                                 val cardJson = cards.getJSONObject(i)
                                 cardList.add(
                                     HearthstoneCard(
-                                        id = cardJson.getInt("id"),
-                                        collectible = cardJson.getBoolean("collectible"),
-                                        slug = cardJson.getString("slug"),
-                                        classId = cardJson.getInt("classId"),
+                                        id = cardJson.optInt("id"),
+                                        collectible = cardJson.optInt("collectible"),
+                                        slug = cardJson.optString("slug"),
+                                        classId = cardJson.optInt("classId"),
                                         multiClassIds = cardJson.getJSONArray("multiClassIds"),
-                                        cardTypeId = cardJson.getInt("cardTypeId"),
-                                        cardSetId = cardJson.getInt("cardSetId"),
+                                        cardTypeId = cardJson.optInt("cardTypeId"),
+                                        cardSetId = cardJson.optInt("cardSetId"),
                                         rarityId = cardJson.optInt("rarityId"),
                                         artistName = cardJson.optString("artistName"),
-                                        health = cardJson.getInt("health"),
-                                        attack = cardJson.getInt("attack"),
-                                        manaCost = cardJson.getInt("manaCost"),
-                                        name = cardJson.getString("name"),
-                                        text = cardJson.getString("text"),
-                                        image = cardJson.getString("image"),
-                                        cropImage = cardJson.getString("cropImage")
+                                        health = cardJson.optInt("health"),
+                                        attack = cardJson.optInt("attack"),
+                                        manaCost = cardJson.optInt("manaCost"),
+                                        name = cardJson.optString("name"),
+                                        text = cardJson.optString("text"),
+                                        image = cardJson.optString("image"),
+                                        cropImage = cardJson.optString("cropImage")
                                     )
                                 )
                             }

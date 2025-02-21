@@ -204,7 +204,7 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
                             }
 
                         }
-                        Text("Page $page from $pageCount")
+                        Text("Page $page of $pageCount")
                         if (page < pageCount) {
                             Button(onClick = {
                                 page += 1

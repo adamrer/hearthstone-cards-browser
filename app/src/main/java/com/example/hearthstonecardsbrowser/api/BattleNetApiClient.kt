@@ -7,6 +7,7 @@ import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
@@ -121,7 +122,52 @@ class BattleNetApiClient (
         }
     }
 
-    fun getMetadata(callback: (Map<String, Map<Int, String>>) -> Unit){ //
+    fun getMetadata(type:String, callback: (Map<Int, MetadataItem>?) -> Unit) { //
+        authenticator.getAccessToken { token ->
 
+            if (token == null){
+                callback(null)
+
+            }
+            else{
+                val url = "https://us.api.blizzard.com/hearthstone/metadata/$type?locale=en_US"
+
+                val request = Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException){
+                        e.printStackTrace()
+                        callback(null)
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.use {
+                            if (!response.isSuccessful){
+                                callback(null)
+                                return
+                            }
+                            val metadataMap = mutableMapOf<Int, MetadataItem>()
+
+                            val metadataArray = JSONArray(response.body?.string() ?: "[]")
+
+                            for (i in 0 until metadataArray.length()){
+                                val metadataObject:JSONObject = metadataArray.getJSONObject(i)
+                                val id = metadataObject.getInt("id")
+                                val name = metadataObject.getString("name")
+                                val slug = metadataObject.getString("slug")
+                                metadataMap[id] = MetadataItem(id, name, slug)
+                            }
+
+                            callback(metadataMap)
+
+                        }
+                    }
+                })
+            }
+
+        }
     }
 }

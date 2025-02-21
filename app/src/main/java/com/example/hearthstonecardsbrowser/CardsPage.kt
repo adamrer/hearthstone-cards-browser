@@ -1,7 +1,6 @@
 package com.example.hearthstonecardsbrowser
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.hearthstonecardsbrowser.api.BattleNetApiClient
-import com.example.hearthstonecardsbrowser.api.BattleNetAuthenticator
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -35,28 +33,64 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
 import com.example.hearthstonecardsbrowser.api.CardRequest
-
+import com.example.hearthstonecardsbrowser.api.MetadataItem
 
 
 @Composable
 fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
+
+    val sortByTypes:Map<Int, MetadataItem> = mapOf(
+        0 to MetadataItem(0, "Mana Cost", "manaCost"),
+        1 to MetadataItem(1, "Attack", "attack"),
+        2 to MetadataItem(2, "Health", "health"),
+        3 to MetadataItem(3, "Data Added", "dataAdded"),
+        4 to MetadataItem(4, "Group by Class", "groupByClass"),
+        5 to MetadataItem(5, "Class", "class"),
+        6 to MetadataItem(6, "Name", "name"),
+
+        )
+
+    var types:Map<Int, MetadataItem>? by remember{ mutableStateOf(null) }
+    var typeNames: List<String> by remember{ mutableStateOf(listOf()) }
+
+    client.getMetadata("types") { metadata ->
+        if (metadata != null){
+            types = HashMap(metadata)
+            typeNames = metadata.values.map{it.name}
+        }
+    }
+    var classes:Map<Int, MetadataItem>? by remember { mutableStateOf(null) }
+    var classNames: List<String> by remember {mutableStateOf(listOf())}
+    client.getMetadata("classes") { metadata ->
+        if (metadata != null){
+            classes = HashMap(metadata)
+            classNames = metadata.values.map{it.name}
+        }
+    }
+
     val keyboardController = LocalSoftwareKeyboardController.current
-    var textFilter by remember { mutableStateOf("") }
-    var classFilter by remember{ mutableStateOf("") }
-    var typeFilter by remember{ mutableStateOf("") }
-    var sortBy by remember{ mutableStateOf("") }
+    var textFilter:String by remember { mutableStateOf("") }
+    var classFilter:MetadataItem by remember{ mutableStateOf(MetadataItem()) }
+    var typeFilter:MetadataItem by remember{ mutableStateOf(MetadataItem()) }
+    var sortBy:MetadataItem by remember{ mutableStateOf(MetadataItem()) }
     var descending by remember{ mutableStateOf(false) }
+
+
+
+
+
+
     var page : Int = 1
     val pageSize = 10
 
     val cardRequest : CardRequest = CardRequest(
         null,
-        classFilter,
-        typeFilter,
+        classFilter.slug,
+        typeFilter.slug,
         null,
         textFilter,
         null,
-        sortBy,
+        sortBy.slug,
         descending,
         page,
         pageSize)
@@ -64,6 +98,9 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
     var cards by remember { mutableStateOf<List<HearthstoneCard>?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+
+
 
     fun loadCards(cardRequest: CardRequest) {
         isLoading = true
@@ -93,8 +130,6 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
             .background(Color(93, 152, 245))
             .paddingFromBaseline(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-
-
         ) {
         Spacer(modifier = Modifier.height(50.dp))
         Row {
@@ -108,50 +143,22 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
                 }
             )
         }
-        Row {
-            OutlinedTextField(
-                value = classFilter,
-                onValueChange = {
-                    classFilter = it
-                },
-                label = {
-                    Text(text = "Class")
-                }
-            )
+        Row (verticalAlignment = Alignment.CenterVertically){
+            Text("Class: ")
+            MetadataDropDownMenu(classes, classFilter, {newValue -> classFilter = newValue})
         }
-        Row {
-            Column{
-
-            }
-            OutlinedTextField(
-                value = typeFilter,
-                onValueChange = {
-                    typeFilter = it
-                },
-                label = {
-                    Text(text = "Type")
-                }
-            )
+        Row (verticalAlignment = Alignment.CenterVertically){
+            Text("Type: ")
+            MetadataDropDownMenu(types, typeFilter, {newValue -> typeFilter = newValue})
         }
-        Row {
-            Column{
-                OutlinedTextField(
-                    value = sortBy,
-                    onValueChange = {
-                        sortBy = it
-                    },
-                    label = {
-                        Text(text = "Sort by")
-                    }
-                )
-            }
-            Column{
-                Text("DESC")
-                Checkbox(
-                    checked = descending,
-                    onCheckedChange = {descending = it}
-                )
-            }
+        Row (verticalAlignment = Alignment.CenterVertically){
+            Text("Sort by: ")
+            MetadataDropDownMenu(sortByTypes, sortBy, {newValue -> sortBy = newValue})
+            Text("DESC")
+            Checkbox(
+                checked = descending,
+                onCheckedChange = {descending = it}
+            )
 
         }
         Row(
@@ -189,6 +196,34 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
     }
 }
 
+@Composable
+fun MetadataDropDownMenu(items: Map<Int, MetadataItem>?, selectedOption: MetadataItem, setOption: (MetadataItem) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Row (verticalAlignment = Alignment.CenterVertically){
+        Box {
+            Button(onClick = { expanded = true }) {
+                Text(selectedOption.name)
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                items?.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.value.name) },
+                        onClick = {
+                            setOption(option.value)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+}
+
 
 @Composable
 fun CardGridScreen(cards: List<HearthstoneCard>) {
@@ -219,7 +254,7 @@ fun CardItem(card: HearthstoneCard) {
                 contentDescription = card.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
+                    .height(230.dp),
                 contentScale = ContentScale.Crop
             )
             Text(

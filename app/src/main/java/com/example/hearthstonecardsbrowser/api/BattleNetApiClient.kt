@@ -20,25 +20,26 @@ class BattleNetApiClient (
     private fun buildUrl(baseUrl: String, request: CardRequest): String {
         val builder = Uri.parse(baseUrl).buildUpon()
         builder.appendQueryParameter("locale", "en_US")
-        if (request.set != null){
+        if (!request.set.isNullOrEmpty()){
             builder.appendQueryParameter("set", request.set)
         }
-        if (request.classFilter != null){
+        if (!request.classFilter.isNullOrEmpty()){
             builder.appendQueryParameter("classFilter", request.classFilter)
         }
-        if (request.type != null){
+        if (!request.type.isNullOrEmpty()){
             builder.appendQueryParameter("type", request.type)
         }
-        if (request.rarity != null){
+
+        if (!request.rarity.isNullOrEmpty()){
             builder.appendQueryParameter("rarity", request.rarity)
         }
-        if (request.textFilter != null){
+        if (!request.textFilter.isNullOrEmpty()){
             builder.appendQueryParameter("textFilter", request.textFilter)
         }
-        if (request.spellSchool != null){
+        if (!request.spellSchool.isNullOrEmpty()){
             builder.appendQueryParameter("spellSchool", request.spellSchool)
         }
-        if (request.sort != null){
+        if (!request.sort.isNullOrEmpty()){
             var paramValue = request.sort
             if (request.descending != null){
                 paramValue += ":"

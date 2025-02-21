@@ -46,38 +46,34 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
         3 to MetadataItem(3, "Data Added", "dataAdded"),
         4 to MetadataItem(4, "Group by Class", "groupByClass"),
         5 to MetadataItem(5, "Class", "class"),
-        6 to MetadataItem(6, "Name", "name"),
-
+        6 to MetadataItem(6, "Name", "name")
         )
 
     var types:Map<Int, MetadataItem>? by remember{ mutableStateOf(null) }
-    var typeNames: List<String> by remember{ mutableStateOf(listOf()) }
 
     client.getMetadata("types") { metadata ->
         if (metadata != null){
-            types = HashMap(metadata)
-            typeNames = metadata.values.map{it.name}
+            val tempClasses:MutableMap<Int, MetadataItem> = HashMap(metadata)
+            tempClasses[-1] = MetadataItem(-1, "Any", "")
+            types = HashMap(tempClasses)
         }
     }
     var classes:Map<Int, MetadataItem>? by remember { mutableStateOf(null) }
-    var classNames: List<String> by remember {mutableStateOf(listOf())}
     client.getMetadata("classes") { metadata ->
         if (metadata != null){
-            classes = HashMap(metadata)
-            classNames = metadata.values.map{it.name}
+            val tempClasses:MutableMap<Int, MetadataItem> = HashMap(metadata)
+            tempClasses[-1] = MetadataItem(-1, "Any", "")
+            classes = HashMap(tempClasses)
+
         }
     }
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    var textFilter:String by remember { mutableStateOf("") }
-    var classFilter:MetadataItem by remember{ mutableStateOf(MetadataItem()) }
-    var typeFilter:MetadataItem by remember{ mutableStateOf(MetadataItem()) }
-    var sortBy:MetadataItem by remember{ mutableStateOf(MetadataItem()) }
-    var descending by remember{ mutableStateOf(false) }
-
-
-
-
+    var textFilter :String by remember { mutableStateOf("") }
+    var classFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
+    var typeFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
+    var sortBy :MetadataItem by remember{ mutableStateOf(MetadataItem(6, "Name", "name")) }
+    var descending :Boolean by remember{ mutableStateOf(false) }
 
 
     var page : Int = 1
@@ -202,7 +198,13 @@ fun MetadataDropDownMenu(items: Map<Int, MetadataItem>?, selectedOption: Metadat
     Row (verticalAlignment = Alignment.CenterVertically){
         Box {
             Button(onClick = { expanded = true }) {
-                Text(selectedOption.name)
+
+                if (selectedOption.name.isEmpty()){
+                    Text("Choose")
+                }
+                else{
+                    Text(selectedOption.name)
+                }
             }
 
             DropdownMenu(

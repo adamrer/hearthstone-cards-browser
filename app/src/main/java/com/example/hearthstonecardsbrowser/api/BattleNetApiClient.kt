@@ -60,10 +60,10 @@ class BattleNetApiClient (
         return builder.build().toString()
     }
 
-    fun getCards(filter: CardRequest, callback: (List<HearthstoneCard>?, Int?) -> Unit) { // callback(cards, page)
+    fun getCards(filter: CardRequest, callback: (List<HearthstoneCard>?, Int?, Int?) -> Unit) { // callback(cards, page, pageCount)
         authenticator.getAccessToken { token ->
             if (token == null){
-                callback(null, null)
+                callback(null, null, null)
 
             }
             else{
@@ -76,13 +76,13 @@ class BattleNetApiClient (
                 client.newCall(request).enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException){
                         e.printStackTrace()
-                        callback(null, null)
+                        callback(null, null, null)
                     }
 
                     override fun onResponse(call: Call, response: Response) {
                         response.use {
                             if (!response.isSuccessful){
-                                callback(null, null)
+                                callback(null, null, null)
                                 return
                             }
                             val json = JSONObject(response.body?.string() ?: "{}")
@@ -114,7 +114,7 @@ class BattleNetApiClient (
                                     )
                                 )
                             }
-                            callback(cardList, page)
+                            callback(cardList, page, pageCount)
 
                         }
                     }

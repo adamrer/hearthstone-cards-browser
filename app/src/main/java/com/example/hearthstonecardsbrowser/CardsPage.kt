@@ -76,8 +76,9 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
     var descending :Boolean by remember{ mutableStateOf(false) }
 
 
-    var page : Int = 1
-    val pageSize = 10
+    var page : Int by remember { mutableStateOf(1) }
+    var pageCount : Int by remember { mutableStateOf(1)}
+    val pageSize = 20
 
     val cardRequest : CardRequest = CardRequest(
         null,
@@ -104,14 +105,17 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
 
         client.getCards(
             cardRequest,
-            { newCards, _ ->
+            { newCards, _, pCount ->
                 isLoading = false
                 if (newCards == null) {
                     errorMessage = "Failed to load cards."
-                } else if (newCards.isEmpty()){
+                } else if (pCount == null){
+                    errorMessage = "Failed to load cards."
+                }else if (newCards.isEmpty()){
                     errorMessage = "No cards found."
                 } else {
                     cards = newCards
+                    pageCount = pCount
                 }
             }
         )
@@ -184,10 +188,42 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
                 )
             }
             cards != null -> {
-                CardGridScreen(cards!!)
+                Column{
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+
+                    ){
+                        if (page > 1){
+                            Button(onClick = {
+                                page -= 1
+                                cardRequest.page = page
+                                loadCards(cardRequest)
+                            }){
+                                Text("Prev")
+                            }
+
+                        }
+                        Text("Page $page from $pageCount")
+                        if (page < pageCount) {
+                            Button(onClick = {
+                                page += 1
+                                cardRequest.page = page
+                                loadCards(cardRequest)
+                            }){
+                                Text("Next")
+                            }
+                        }
+                    }
+                    Row{
+                        CardGridScreen(cards!!)
+                    }
+            }
             }
 
         }
+
+
 
     }
 }

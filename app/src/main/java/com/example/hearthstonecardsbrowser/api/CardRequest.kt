@@ -9,6 +9,6 @@ data class CardRequest (
     val spellSchool: String?,
     val sort: String?,
     val descending: Boolean?,
-    val page: Int?,
+    var page: Int,
     val pageSize: Int?
 )

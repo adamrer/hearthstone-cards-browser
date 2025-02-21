@@ -24,14 +24,12 @@ import com.example.hearthstonecardsbrowser.api.MetadataItem
 @Composable
 fun CardDetailPage(navController: NavController) {
     val card = navController.previousBackStackEntry?.savedStateHandle?.get<HearthstoneCard>("card")
-    val rarities = navController.previousBackStackEntry?.savedStateHandle?.get<Map<Int, MetadataItem>?>("rarities")
-    val classes = navController.previousBackStackEntry?.savedStateHandle?.get<Map<Int, MetadataItem>?>("classes")
-    val types = navController.previousBackStackEntry?.savedStateHandle?.get<Map<Int, MetadataItem>?>("types")
+    val metadata = navController.previousBackStackEntry?.savedStateHandle?.get<Map<String, Map<Int, MetadataItem>>>("metadata")
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding).background(Color.LightGray)) {
             Text(
-                text = card?.name ?: "Joe Mama",
+                text = card?.name ?: "",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -50,15 +48,15 @@ fun CardDetailPage(navController: NavController) {
                 )
             }
             Row{
-                Text("Class: ${classes?.get(card?.classId)?.name}")
+                Text("Class: ${metadata?.get("classes")?.get(card?.classId)?.name}")
 
             }
             Row{
-                Text("Type: ${types?.get(card?.cardTypeId)?.name}")
+                Text("Type: ${metadata?.get("types")?.get(card?.cardTypeId)?.name}")
 
             }
             Row{
-                Text("Rarity: ${rarities?.get(card?.rarityId)?.name}")
+                Text("Rarity: ${metadata?.get("rarities")?.get(card?.rarityId)?.name}")
             }
 
             Row{

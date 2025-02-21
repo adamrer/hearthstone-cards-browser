@@ -21,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.hearthstonecardsbrowser.api.BattleNetApiClient
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -29,17 +28,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.hearthstonecardsbrowser.api.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 
 
 @Composable
-fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier: Modifier) {
+fun CardsPage(viewModel : BattleNetViewModel, navController: NavController, modifier: Modifier) {
 
     val sortByTypes:Map<Int, MetadataItem> = mapOf(
         0 to MetadataItem(0, "Mana Cost", "manaCost"),
@@ -51,38 +52,8 @@ fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier
         6 to MetadataItem(6, "Name", "name")
         )
 
-    var types:Map<Int, MetadataItem>? by remember{ mutableStateOf(null) }
 
-    client.getMetadata("types") { metadata ->
-        if (metadata != null){
-            val tempTypes:MutableMap<Int, MetadataItem> = HashMap(metadata)
-            tempTypes[-1] = MetadataItem(-1, "Any", "")
-            types = HashMap(tempTypes)
-        }
-    }
-
-    var classes:Map<Int, MetadataItem>? by remember { mutableStateOf(null) }
-
-    client.getMetadata("classes") { metadata ->
-        if (metadata != null){
-            val tempClasses:MutableMap<Int, MetadataItem> = HashMap(metadata)
-            tempClasses[-1] = MetadataItem(-1, "Any", "")
-            classes = HashMap(tempClasses)
-
-        }
-    }
-
-    var rarities:Map<Int, MetadataItem>? by remember { mutableStateOf(null) }
-
-    client.getMetadata("rarities") { metadata ->
-        if (metadata != null){
-            val tempRarities:MutableMap<Int, MetadataItem> = HashMap(metadata)
-            tempRarities[-1] = MetadataItem(-1, "Any", "")
-            rarities = HashMap(tempRarities)
-        }
-    }
-
-        val keyboardController = LocalSoftwareKeyboardController.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     var textFilter :String by remember { mutableStateOf("") }
     var classFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
     var typeFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
@@ -91,8 +62,8 @@ fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier
     var descending :Boolean by remember{ mutableStateOf(false) }
 
 
-    var page : Int by remember { mutableStateOf(1) }
-    var pageCount : Int by remember { mutableStateOf(1)}
+    var page : Int by remember { mutableIntStateOf(1) }
+    val pageCount by viewModel.pageCount
     val pageSize = 20
 
     val cardRequest : CardRequest = CardRequest(
@@ -107,33 +78,19 @@ fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier
         page,
         pageSize)
 
-    var cards by remember { mutableStateOf<List<HearthstoneCard>?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    val cards by viewModel.cards
+    val metadata by viewModel.metadata
 
+    val errorMessage by viewModel.errorMessage
+    val isLoading by viewModel.isLoading
+
+    viewModel.searchMetadata()
 
 
 
     fun loadCards(cardRequest: CardRequest) {
-        isLoading = true
-        errorMessage = null
 
-        client.getCards(
-            cardRequest,
-            { newCards, _, pCount ->
-                isLoading = false
-                if (newCards == null) {
-                    errorMessage = "Failed to load cards."
-                } else if (pCount == null){
-                    errorMessage = "Failed to load cards."
-                }else if (newCards.isEmpty()){
-                    errorMessage = "No cards found."
-                } else {
-                    cards = newCards
-                    pageCount = pCount
-                }
-            }
-        )
+        viewModel.searchCards(cardRequest)
     }
 
 
@@ -160,15 +117,15 @@ fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier
         }
         Row (verticalAlignment = Alignment.CenterVertically){
             Text("Class: ")
-            MetadataDropDownMenu(classes, classFilter, {newValue -> classFilter = newValue})
+            MetadataDropDownMenu(metadata["classes"], classFilter, {newValue -> classFilter = newValue})
         }
         Row (verticalAlignment = Alignment.CenterVertically){
             Text("Type: ")
-            MetadataDropDownMenu(types, typeFilter, {newValue -> typeFilter = newValue})
+            MetadataDropDownMenu(metadata["types"], typeFilter, {newValue -> typeFilter = newValue})
         }
         Row (verticalAlignment = Alignment.CenterVertically){
             Text("Rarity: ")
-            MetadataDropDownMenu(rarities, rarityFilter, {newValue -> rarityFilter = newValue})
+            MetadataDropDownMenu(metadata["rarities"], rarityFilter, {newValue -> rarityFilter = newValue})
         }
         Row (verticalAlignment = Alignment.CenterVertically){
             Text("Sort by: ")
@@ -199,27 +156,28 @@ fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier
             isLoading -> {
                 CircularProgressIndicator()
             }
-            errorMessage != null -> {
+            errorMessage.isNotEmpty() -> {
                 Text(
-                    text = errorMessage!!,
+                    text = errorMessage,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            cards != null -> {
-                Column{
+
+            else -> {
+                Column {
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically
 
-                    ){
-                        if (page > 1){
+                    ) {
+                        if (page > 1) {
                             Button(onClick = {
                                 page -= 1
                                 cardRequest.page = page
                                 loadCards(cardRequest)
-                            }){
+                            }) {
                                 Text("Prev")
                             }
 
@@ -230,17 +188,16 @@ fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier
                                 page += 1
                                 cardRequest.page = page
                                 loadCards(cardRequest)
-                            }){
+                            }) {
                                 Text("Next")
                             }
                         }
                     }
-                    Row{
-                        CardGridScreen(cards!!, navController, rarities, types, classes)
+                    Row {
+                        CardGridScreen(cards, navController, metadata)
                     }
+                }
             }
-            }
-
         }
 
 
@@ -284,7 +241,7 @@ fun MetadataDropDownMenu(items: Map<Int, MetadataItem>?, selectedOption: Metadat
 
 
 @Composable
-fun CardGridScreen(cards: List<HearthstoneCard>, navController: NavController, rarities:Map<Int, MetadataItem>?, types:Map<Int, MetadataItem>?, classes:Map<Int, MetadataItem>?) {
+fun CardGridScreen(cards: List<HearthstoneCard>, navController: NavController, metadata: Map<String, Map<Int, MetadataItem>>) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier.background(Color.White).fillMaxSize(),
@@ -293,9 +250,7 @@ fun CardGridScreen(cards: List<HearthstoneCard>, navController: NavController, r
         items(cards) { card ->
             CardItem(card){
                 navController.currentBackStackEntry?.savedStateHandle?.set("card", card)
-                navController.currentBackStackEntry?.savedStateHandle?.set("rarities", rarities)
-                navController.currentBackStackEntry?.savedStateHandle?.set("types", types)
-                navController.currentBackStackEntry?.savedStateHandle?.set("classes", classes)
+                navController.currentBackStackEntry?.savedStateHandle?.set("metadata", metadata)
                 navController.navigate("cardDetail")
             }
         }

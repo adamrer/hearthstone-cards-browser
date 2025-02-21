@@ -53,12 +53,14 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
 
     client.getMetadata("types") { metadata ->
         if (metadata != null){
-            val tempClasses:MutableMap<Int, MetadataItem> = HashMap(metadata)
-            tempClasses[-1] = MetadataItem(-1, "Any", "")
-            types = HashMap(tempClasses)
+            val tempTypes:MutableMap<Int, MetadataItem> = HashMap(metadata)
+            tempTypes[-1] = MetadataItem(-1, "Any", "")
+            types = HashMap(tempTypes)
         }
     }
+
     var classes:Map<Int, MetadataItem>? by remember { mutableStateOf(null) }
+
     client.getMetadata("classes") { metadata ->
         if (metadata != null){
             val tempClasses:MutableMap<Int, MetadataItem> = HashMap(metadata)
@@ -68,10 +70,21 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
         }
     }
 
+    var rarities:Map<Int, MetadataItem>? by remember { mutableStateOf(null) }
+
+    client.getMetadata("rarities") { metadata ->
+        if (metadata != null){
+            val tempRarities:MutableMap<Int, MetadataItem> = HashMap(metadata)
+            tempRarities[-1] = MetadataItem(-1, "Any", "")
+            rarities = HashMap(tempRarities)
+        }
+    }
+
     val keyboardController = LocalSoftwareKeyboardController.current
     var textFilter :String by remember { mutableStateOf("") }
     var classFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
     var typeFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
+    var rarityFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", ""))}
     var sortBy :MetadataItem by remember{ mutableStateOf(MetadataItem(6, "Name", "name")) }
     var descending :Boolean by remember{ mutableStateOf(false) }
 
@@ -84,7 +97,7 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
         null,
         classFilter.slug,
         typeFilter.slug,
-        null,
+        rarityFilter.slug,
         textFilter,
         null,
         sortBy.slug,
@@ -152,6 +165,10 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
             MetadataDropDownMenu(types, typeFilter, {newValue -> typeFilter = newValue})
         }
         Row (verticalAlignment = Alignment.CenterVertically){
+            Text("Rarity: ")
+            MetadataDropDownMenu(rarities, rarityFilter, {newValue -> rarityFilter = newValue})
+        }
+        Row (verticalAlignment = Alignment.CenterVertically){
             Text("Sort by: ")
             MetadataDropDownMenu(sortByTypes, sortBy, {newValue -> sortBy = newValue})
             Text("DESC")
@@ -168,6 +185,7 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
 
             Button(onClick = {
                 keyboardController?.hide()
+                cardRequest.page = 1
                 loadCards(cardRequest)
             }){
                 Text("Search")

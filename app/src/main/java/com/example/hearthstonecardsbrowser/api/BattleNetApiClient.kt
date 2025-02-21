@@ -24,7 +24,7 @@ class BattleNetApiClient (
             builder.appendQueryParameter("set", request.set)
         }
         if (!request.classFilter.isNullOrEmpty()){
-            builder.appendQueryParameter("classFilter", request.classFilter)
+            builder.appendQueryParameter("class", request.classFilter)
         }
         if (!request.type.isNullOrEmpty()){
             builder.appendQueryParameter("type", request.type)

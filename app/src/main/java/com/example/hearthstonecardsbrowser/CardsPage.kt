@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.example.hearthstonecardsbrowser.api.BattleNetApiClient
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.items
@@ -31,13 +32,14 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 
 
 @Composable
-fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
+fun CardsPage(client: BattleNetApiClient, navController: NavController, modifier: Modifier) {
 
     val sortByTypes:Map<Int, MetadataItem> = mapOf(
         0 to MetadataItem(0, "Mana Cost", "manaCost"),
@@ -80,7 +82,7 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
         }
     }
 
-    val keyboardController = LocalSoftwareKeyboardController.current
+        val keyboardController = LocalSoftwareKeyboardController.current
     var textFilter :String by remember { mutableStateOf("") }
     var classFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
     var typeFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Any", "")) }
@@ -234,7 +236,7 @@ fun CardsPage(client: BattleNetApiClient, modifier: Modifier) {
                         }
                     }
                     Row{
-                        CardGridScreen(cards!!)
+                        CardGridScreen(cards!!, navController, rarities, types, classes)
                     }
             }
             }
@@ -282,24 +284,31 @@ fun MetadataDropDownMenu(items: Map<Int, MetadataItem>?, selectedOption: Metadat
 
 
 @Composable
-fun CardGridScreen(cards: List<HearthstoneCard>) {
+fun CardGridScreen(cards: List<HearthstoneCard>, navController: NavController, rarities:Map<Int, MetadataItem>?, types:Map<Int, MetadataItem>?, classes:Map<Int, MetadataItem>?) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier.background(Color.White).fillMaxSize(),
         contentPadding = PaddingValues(8.dp)
     ) {
         items(cards) { card ->
-            CardItem(card)
+            CardItem(card){
+                navController.currentBackStackEntry?.savedStateHandle?.set("card", card)
+                navController.currentBackStackEntry?.savedStateHandle?.set("rarities", rarities)
+                navController.currentBackStackEntry?.savedStateHandle?.set("types", types)
+                navController.currentBackStackEntry?.savedStateHandle?.set("classes", classes)
+                navController.navigate("cardDetail")
+            }
         }
     }
 }
 
 @Composable
-fun CardItem(card: HearthstoneCard) {
+fun CardItem(card: HearthstoneCard, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable{onClick()},
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {

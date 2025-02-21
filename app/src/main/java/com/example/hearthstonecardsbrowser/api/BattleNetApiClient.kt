@@ -16,10 +16,11 @@ class BattleNetApiClient (
 ){
     private val client = OkHttpClient()
     private val baseUrl = "https://us.api.blizzard.com/hearthstone/cards"
+    private val locale = "en_US"
 
-    private fun buildUrl(baseUrl: String, request: CardRequest): String {
+    private fun buildUrl(request: CardRequest): String {
         val builder = Uri.parse(baseUrl).buildUpon()
-        builder.appendQueryParameter("locale", "en_US")
+        builder.appendQueryParameter("locale", locale)
         if (!request.set.isNullOrEmpty()){
             builder.appendQueryParameter("set", request.set)
         }
@@ -59,6 +60,27 @@ class BattleNetApiClient (
         }
         return builder.build().toString()
     }
+    private fun cardFromJson(cardJson: JSONObject) : HearthstoneCard {
+
+        return HearthstoneCard(
+                id = cardJson.optInt("id"),
+                collectible = cardJson.optInt("collectible"),
+                slug = cardJson.optString("slug"),
+                classId = cardJson.optInt("classId"),
+                cardTypeId = cardJson.optInt("cardTypeId"),
+                cardSetId = cardJson.optInt("cardSetId"),
+                rarityId = cardJson.optInt("rarityId"),
+                artistName = cardJson.optString("artistName"),
+                health = cardJson.optInt("health"),
+                attack = cardJson.optInt("attack"),
+                manaCost = cardJson.optInt("manaCost"),
+                name = cardJson.optString("name"),
+                text = cardJson.optString("text"),
+                image = cardJson.optString("image"),
+                cropImage = cardJson.optString("cropImage"),
+                flavorText = cardJson.optString("flavorText")
+            )
+    }
 
     fun getCards(filter: CardRequest, callback: (List<HearthstoneCard>?, Int?, Int?) -> Unit) { // callback(cards, page, pageCount)
         authenticator.getAccessToken { token ->
@@ -69,7 +91,7 @@ class BattleNetApiClient (
             else{
 
                 val request = Request.Builder()
-                    .url(buildUrl(baseUrl, filter))
+                    .url(buildUrl(filter))
                     .header("Authorization", "Bearer $token")
                     .build()
 
@@ -93,26 +115,7 @@ class BattleNetApiClient (
                             val cardList = mutableListOf<HearthstoneCard>()
                             for (i in 0 until cards.length()){
                                 val cardJson = cards.getJSONObject(i)
-                                cardList.add(
-                                    HearthstoneCard(
-                                        id = cardJson.optInt("id"),
-                                        collectible = cardJson.optInt("collectible"),
-                                        slug = cardJson.optString("slug"),
-                                        classId = cardJson.optInt("classId"),
-                                        multiClassIds = cardJson.getJSONArray("multiClassIds"),
-                                        cardTypeId = cardJson.optInt("cardTypeId"),
-                                        cardSetId = cardJson.optInt("cardSetId"),
-                                        rarityId = cardJson.optInt("rarityId"),
-                                        artistName = cardJson.optString("artistName"),
-                                        health = cardJson.optInt("health"),
-                                        attack = cardJson.optInt("attack"),
-                                        manaCost = cardJson.optInt("manaCost"),
-                                        name = cardJson.optString("name"),
-                                        text = cardJson.optString("text"),
-                                        image = cardJson.optString("image"),
-                                        cropImage = cardJson.optString("cropImage")
-                                    )
-                                )
+                                cardList.add(cardFromJson(cardJson))
                             }
                             callback(cardList, page, pageCount)
 
@@ -131,7 +134,7 @@ class BattleNetApiClient (
 
             }
             else{
-                val url = "https://us.api.blizzard.com/hearthstone/metadata/$type?locale=en_US"
+                val url = "https://us.api.blizzard.com/hearthstone/metadata/$type?locale=$locale"
 
                 val request = Request.Builder()
                     .url(url)
@@ -169,6 +172,44 @@ class BattleNetApiClient (
                 })
             }
 
+        }
+    }
+
+    fun getCard(id: Int, callback: (HearthstoneCard?) -> Unit){
+        authenticator.getAccessToken { token ->
+            if (token == null){
+                callback(null)
+
+            }
+            else{
+                val url = "$baseUrl/$id?locale=$locale"
+
+                val request = Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException){
+                        e.printStackTrace()
+                        callback(null)
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.use {
+                            if (!response.isSuccessful){
+                                callback(null)
+                                return
+                            }
+
+
+                            val cardJson = JSONObject(response.body?.string() ?: "{}")
+
+                            callback(cardFromJson(cardJson))
+                        }
+                    }
+                })
+            }
         }
     }
 }

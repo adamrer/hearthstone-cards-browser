@@ -26,15 +26,17 @@ import com.example.hearthstonecardsbrowser.api.MetadataItem
 @Composable
 fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modifier: Modifier) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    var textFilter by remember { mutableStateOf("") }
-    var classFilter by remember { mutableStateOf(MetadataItem(-1, "Any class", "")) }
-    var typeFilter by remember { mutableStateOf(MetadataItem(-1, "Any type", "")) }
-    var rarityFilter by remember { mutableStateOf(MetadataItem(-1, "Any rarity", "")) }
-    var sortBy by remember { mutableStateOf(MetadataItem(6, "Name", "name")) }
-    var descending by remember { mutableStateOf(false) }
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+
+    var textFilter by remember { mutableStateOf(savedStateHandle?.get<String>("textFilter") ?: "") }
+    var classFilter by remember { mutableStateOf(savedStateHandle?.get<MetadataItem>("classFilter") ?: MetadataItem(-1, "Any class", "")) }
+    var typeFilter by remember { mutableStateOf(savedStateHandle?.get<MetadataItem>("typeFilter") ?: MetadataItem(-1, "Any type", "")) }
+    var rarityFilter by remember { mutableStateOf(savedStateHandle?.get<MetadataItem>("rarityFilter") ?: MetadataItem(-1, "Any rarity", "")) }
+    var sortBy by remember { mutableStateOf(savedStateHandle?.get<MetadataItem>("sortBy") ?: MetadataItem(6, "Name", "name")) }
+    var descending by remember { mutableStateOf(savedStateHandle?.get<Boolean>("descending") ?: false) }
     var isFiltersExpanded by remember { mutableStateOf(false) }
 
-    var page by remember { mutableIntStateOf(1) }
+    var page by remember { mutableIntStateOf(savedStateHandle?.get<Int>("page") ?: 1) }
     val pageCount by viewModel.pageCount
     val cards by viewModel.cards
     val metadata by viewModel.metadata
@@ -43,11 +45,22 @@ fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modif
 
     LaunchedEffect(Unit) { viewModel.searchMetadata() }
 
+
     val cardRequest = CardRequest(null, classFilter.slug, typeFilter.slug, rarityFilter.slug, textFilter, null, sortBy.slug, descending, page, 20)
 
     fun loadCards() {
         cardRequest.page = page
         viewModel.searchCards(cardRequest)
+    }
+
+    LaunchedEffect(textFilter, classFilter, typeFilter, rarityFilter, sortBy, descending, page) {
+        savedStateHandle?.set("textFilter", textFilter)
+        savedStateHandle?.set("classFilter", classFilter)
+        savedStateHandle?.set("typeFilter", typeFilter)
+        savedStateHandle?.set("rarityFilter", rarityFilter)
+        savedStateHandle?.set("sortBy", sortBy)
+        savedStateHandle?.set("descending", descending)
+        savedStateHandle?.set("page", page)
     }
 
     Column(
@@ -104,7 +117,7 @@ fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modif
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .padding(vertical = 10.dp)
-                                 //   .height(60.dp)
+                                    .height(60.dp)
                             ) {
                                 Text("Sort by:", modifier = Modifier.align(Alignment.CenterVertically))
 
@@ -146,7 +159,12 @@ fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modif
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
-                    onClick = { keyboardController?.hide(); page = 1; loadCards() },
+                    onClick = {
+                        keyboardController?.hide()
+                        page = 1
+                        loadCards()
+                        isFiltersExpanded = false
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Search")

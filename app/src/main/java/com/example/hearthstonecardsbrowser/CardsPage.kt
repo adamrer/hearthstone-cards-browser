@@ -172,7 +172,7 @@ fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modif
                             if (page < pageCount) Button(onClick = { page++; loadCards() }) { Text("Next") }
                         }
                     }
-                    CardGridScreen(cards, navController)
+                    CardGridScreen(cards, navController, metadata)
                 }
             }
         }
@@ -196,11 +196,12 @@ fun MetadataDropDownMenu(items: Map<Int, MetadataItem>?, selectedOption: Metadat
 }
 
 @Composable
-fun CardGridScreen(cards: List<HearthstoneCard>, navController: NavController) {
+fun CardGridScreen(cards: List<HearthstoneCard>, navController: NavController, metadata: Map<String, Map<Int, MetadataItem>>) {
     LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(8.dp)) {
         items(cards) { card ->
             CardItem(card) {
                 navController.currentBackStackEntry?.savedStateHandle?.set("card", card)
+                navController.currentBackStackEntry?.savedStateHandle?.set("metadata", metadata)
                 navController.navigate("cardDetail")
             }
         }

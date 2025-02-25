@@ -1,5 +1,6 @@
 package com.example.hearthstonecardsbrowser
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,50 +22,25 @@ import com.example.hearthstonecardsbrowser.api.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 
-
 @Composable
-fun CardsPage(viewModel : BattleNetViewModel, navController: NavController, modifier: Modifier) {
-
-    val sortByTypes:Map<Int, MetadataItem> = mapOf(
-        0 to MetadataItem(0, "Mana Cost", "manaCost"),
-        1 to MetadataItem(1, "Attack", "attack"),
-        2 to MetadataItem(2, "Health", "health"),
-        3 to MetadataItem(3, "Data Added", "dataAdded"),
-        4 to MetadataItem(4, "Group by Class", "groupByClass"),
-        5 to MetadataItem(5, "Class", "class"),
-        6 to MetadataItem(6, "Name", "name")
-        )
-
-
+fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modifier: Modifier) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    var textFilter :String by remember { mutableStateOf("") }
-    var classFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Class", "")) }
-    var typeFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Type", "")) }
-    var rarityFilter :MetadataItem by remember{ mutableStateOf(MetadataItem(-1, "Rarity", ""))}
-    var sortBy :MetadataItem by remember{ mutableStateOf(MetadataItem(6, "Name", "name")) }
-    var descending :Boolean by remember{ mutableStateOf(false) }
+    var textFilter by remember { mutableStateOf("") }
+    var classFilter by remember { mutableStateOf(MetadataItem(-1, "Class", "")) }
+    var typeFilter by remember { mutableStateOf(MetadataItem(-1, "Type", "")) }
+    var rarityFilter by remember { mutableStateOf(MetadataItem(-1, "Rarity", "")) }
+    var sortBy by remember { mutableStateOf(MetadataItem(6, "Name", "name")) }
+    var descending by remember { mutableStateOf(false) }
+    var isFiltersExpanded by remember { mutableStateOf(false) } // Toggle state
 
-
-    var page : Int by remember { mutableIntStateOf(1) }
-    var isMetadataLoading by remember { mutableStateOf(true) }
+    var page by remember { mutableIntStateOf(1) }
     val pageCount by viewModel.pageCount
     val cards by viewModel.cards
     val metadata by viewModel.metadata
     val errorMessage by viewModel.errorMessage
     val isLoading by viewModel.isLoading
 
-    LaunchedEffect(Unit) {
-        viewModel.searchMetadata()
-        isMetadataLoading = true
-    }
-
-    LaunchedEffect(metadata) {
-        while (metadata.size < 3) {
-            Thread.yield()
-        }
-        isMetadataLoading = false
-    }
-
+    LaunchedEffect(Unit) { viewModel.searchMetadata() }
 
     val cardRequest = CardRequest(null, classFilter.slug, typeFilter.slug, rarityFilter.slug, textFilter, null, sortBy.slug, descending, page, 20)
 
@@ -85,30 +61,66 @@ fun CardsPage(viewModel : BattleNetViewModel, navController: NavController, modi
                 .fillMaxWidth()
                 .padding(8.dp),
             colors = CardDefaults.cardColors(Color.White)
-        ){
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                OutlinedTextField(
-                    value = textFilter,
-                    onValueChange = { textFilter = it },
-                    label = { Text("Search") },
+                // Row for search bar and expand button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    MetadataDropDownMenu(metadata["classes"], classFilter) { classFilter = it }
-                    MetadataDropDownMenu(metadata["types"], typeFilter) { typeFilter = it }
-                    MetadataDropDownMenu(metadata["rarities"], rarityFilter) { rarityFilter = it }
+                ) {
+                    OutlinedTextField(
+                        value = textFilter,
+                        onValueChange = { textFilter = it },
+                        label = { Text("Search") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = { isFiltersExpanded = !isFiltersExpanded }) {
+                        Text(if (isFiltersExpanded) "Hide Filters" else "Show Filters")
+                    }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                    Text("Sort by:")
-                    MetadataDropDownMenu(sortByTypes, sortBy) { sortBy = it }
-                    Checkbox(checked = descending, onCheckedChange = { descending = it })
-                    Text("Descending")
+                // Animated visibility for advanced filters
+                AnimatedVisibility(visible = isFiltersExpanded) {
+                    Column {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            MetadataDropDownMenu(metadata["classes"], classFilter) { classFilter = it }
+                            MetadataDropDownMenu(metadata["types"], typeFilter) { typeFilter = it }
+                            MetadataDropDownMenu(metadata["rarities"], rarityFilter) { rarityFilter = it }
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text("Sort by:")
+                            MetadataDropDownMenu(
+                                mapOf(
+                                    0 to MetadataItem(0, "Mana Cost", "manaCost"),
+                                    1 to MetadataItem(1, "Attack", "attack"),
+                                    2 to MetadataItem(2, "Health", "health"),
+                                    3 to MetadataItem(3, "Data Added", "dataAdded"),
+                                    4 to MetadataItem(4, "Group by Class", "groupByClass"),
+                                    5 to MetadataItem(5, "Class", "class"),
+                                    6 to MetadataItem(6, "Name", "name")
+                                ),
+                                sortBy
+                            ) { sortBy = it }
+                            Checkbox(checked = descending, onCheckedChange = { descending = it })
+                            Text("Descending")
+                        }
+                    }
                 }
+
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = { keyboardController?.hide(); page = 1; loadCards() }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { keyboardController?.hide(); page = 1; loadCards() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Search")
                 }
             }
@@ -117,14 +129,20 @@ fun CardsPage(viewModel : BattleNetViewModel, navController: NavController, modi
         Spacer(modifier = Modifier.height(16.dp))
 
         when {
-            isLoading || isMetadataLoading -> CircularProgressIndicator()
+            isLoading -> CircularProgressIndicator()
             errorMessage.isNotEmpty() -> Text(text = errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
             else -> {
                 Column {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                        if (page > 1) Button(onClick = { page--; loadCards() }) { Text("Prev") }
-                        Text("Page $page of $pageCount", Modifier.padding(horizontal = 16.dp))
-                        if (page < pageCount) Button(onClick = { page++; loadCards() }) { Text("Next") }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    ) {
+                        if (pageCount != 0){
+                            if (page > 1) Button(onClick = { page--; loadCards() }) { Text("Prev") }
+                            Text("Page $page of $pageCount", Modifier.padding(horizontal = 16.dp))
+                            if (page < pageCount) Button(onClick = { page++; loadCards() }) { Text("Next") }
+                        }
                     }
                     CardGridScreen(cards, navController)
                 }
@@ -132,6 +150,7 @@ fun CardsPage(viewModel : BattleNetViewModel, navController: NavController, modi
         }
     }
 }
+
 
 @Composable
 fun MetadataDropDownMenu(items: Map<Int, MetadataItem>?, selectedOption: MetadataItem, setOption: (MetadataItem) -> Unit) {

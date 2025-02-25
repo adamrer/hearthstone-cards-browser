@@ -22,16 +22,17 @@ import com.example.hearthstonecardsbrowser.api.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modifier: Modifier) {
     val keyboardController = LocalSoftwareKeyboardController.current
     var textFilter by remember { mutableStateOf("") }
-    var classFilter by remember { mutableStateOf(MetadataItem(-1, "Class", "")) }
-    var typeFilter by remember { mutableStateOf(MetadataItem(-1, "Type", "")) }
-    var rarityFilter by remember { mutableStateOf(MetadataItem(-1, "Rarity", "")) }
+    var classFilter by remember { mutableStateOf(MetadataItem(-1, "Any class", "")) }
+    var typeFilter by remember { mutableStateOf(MetadataItem(-1, "Any type", "")) }
+    var rarityFilter by remember { mutableStateOf(MetadataItem(-1, "Any rarity", "")) }
     var sortBy by remember { mutableStateOf(MetadataItem(6, "Name", "name")) }
     var descending by remember { mutableStateOf(false) }
-    var isFiltersExpanded by remember { mutableStateOf(false) } // Toggle state
+    var isFiltersExpanded by remember { mutableStateOf(false) }
 
     var page by remember { mutableIntStateOf(1) }
     val pageCount by viewModel.pageCount
@@ -63,7 +64,6 @@ fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modif
             colors = CardDefaults.cardColors(Color.White)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Row for search bar and expand button
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -80,38 +80,66 @@ fun CardsPage(viewModel: BattleNetViewModel, navController: NavController, modif
                     }
                 }
 
-                // Animated visibility for advanced filters
                 AnimatedVisibility(visible = isFiltersExpanded) {
                     Column {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
+                        FlowRow (
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+
                         ) {
                             MetadataDropDownMenu(metadata["classes"], classFilter) { classFilter = it }
                             MetadataDropDownMenu(metadata["types"], typeFilter) { typeFilter = it }
                             MetadataDropDownMenu(metadata["rarities"], rarityFilter) { rarityFilter = it }
                         }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 8.dp)
+                        FlowRow(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .fillMaxWidth()
                         ) {
-                            Text("Sort by:")
-                            MetadataDropDownMenu(
-                                mapOf(
-                                    0 to MetadataItem(0, "Mana Cost", "manaCost"),
-                                    1 to MetadataItem(1, "Attack", "attack"),
-                                    2 to MetadataItem(2, "Health", "health"),
-                                    3 to MetadataItem(3, "Data Added", "dataAdded"),
-                                    4 to MetadataItem(4, "Group by Class", "groupByClass"),
-                                    5 to MetadataItem(5, "Class", "class"),
-                                    6 to MetadataItem(6, "Name", "name")
-                                ),
-                                sortBy
-                            ) { sortBy = it }
-                            Checkbox(checked = descending, onCheckedChange = { descending = it })
-                            Text("Descending")
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(vertical = 10.dp)
+                                 //   .height(60.dp)
+                            ) {
+                                Text("Sort by:", modifier = Modifier.align(Alignment.CenterVertically))
+
+                                MetadataDropDownMenu(
+                                    mapOf(
+                                        0 to MetadataItem(0, "Mana Cost", "manaCost"),
+                                        1 to MetadataItem(1, "Attack", "attack"),
+                                        2 to MetadataItem(2, "Health", "health"),
+                                        3 to MetadataItem(3, "Date Added", "dataAdded"),
+                                        4 to MetadataItem(4, "Group by Class", "groupByClass"),
+                                        5 to MetadataItem(5, "Class", "class"),
+                                        6 to MetadataItem(6, "Name", "name")
+                                    ),
+                                    sortBy
+                                ) { sortBy = it }
+                            }
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(vertical = 10.dp)
+                                    .height(60.dp)
+                            ) {
+                                Switch(
+                                    checked = descending,
+                                    onCheckedChange = { descending = it },
+                                    modifier = Modifier
+                                        .padding(horizontal = 10.dp)
+                                )
+
+                                Text(
+                                    text = if (descending) "Descending" else "Ascending",
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
+                            }
                         }
                     }
                 }

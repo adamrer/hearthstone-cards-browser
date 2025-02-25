@@ -69,21 +69,21 @@ class BattleNetViewModel : ViewModel() {
         fetchMetadata("rarities"){ result ->
             if (result != null){
                 val tempResult = HashMap(result)
-                tempResult[-1] = MetadataItem(-1, "Any", "")
+                tempResult[-1] = MetadataItem(-1, "Any rarity", "")
                 _metadata.value["rarities"] = tempResult
             }
         }
         fetchMetadata("classes"){ result ->
             if (result != null){
                 val tempResult = HashMap(result)
-                tempResult[-1] = MetadataItem(-1, "Any", "")
+                tempResult[-1] = MetadataItem(-1, "Any class", "")
                 _metadata.value["classes"] = tempResult
             }
         }
         fetchMetadata("types"){ result ->
             if (result != null){
                 val tempResult = HashMap(result)
-                tempResult[-1] = MetadataItem(-1, "Any", "")
+                tempResult[-1] = MetadataItem(-1, "Any type", "")
                 _metadata.value["types"] = tempResult
             }
         }

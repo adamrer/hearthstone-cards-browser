@@ -6,7 +6,17 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.hearthstonecardsbrowser.HearthstoneCard
+import com.example.hearthstonecardsbrowser.Constants.ALL_CLASSES
+import com.example.hearthstonecardsbrowser.Constants.ALL_RARITIES
+import com.example.hearthstonecardsbrowser.Constants.ALL_TYPES
+import com.example.hearthstonecardsbrowser.Constants.BASE_URL
+import com.example.hearthstonecardsbrowser.Constants.CLIENT_ID
+import com.example.hearthstonecardsbrowser.Constants.CLIENT_SECRET
+import com.example.hearthstonecardsbrowser.Constants.LOCALE
+import com.example.hearthstonecardsbrowser.Constants.METADATA_CLASSES_NAME
+import com.example.hearthstonecardsbrowser.Constants.METADATA_RARITIES_NAME
+import com.example.hearthstonecardsbrowser.Constants.METADATA_TYPES_NAME
+import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -36,10 +46,10 @@ class BattleNetViewModel : ViewModel() {
     val errorMessage: State<String> = _errorMessage
 
     private val client = OkHttpClient()
-    private val baseUrl = "https://us.api.blizzard.com/hearthstone/cards"
-    private val locale = "en_US"
-    private val clientId = "38254a25f2814cb4bb94ade89f3d6a6d"
-    private val clientSecret = "eFrAlzvVXrELx9RY2073aam8Wz1lsrl9"
+    private val baseUrl = BASE_URL
+    private val locale = LOCALE
+    private val clientId = CLIENT_ID
+    private val clientSecret = CLIENT_SECRET
 
     private val authenticator = BattleNetAuthenticator(clientId, clientSecret)
 
@@ -62,25 +72,25 @@ class BattleNetViewModel : ViewModel() {
     }
 
     fun searchMetadata() {
-        fetchMetadata("rarities") { result ->
+        fetchMetadata(METADATA_RARITIES_NAME) { result ->
             if (result != null) {
                 val tempResult = HashMap(result)
-                tempResult[-1] = MetadataItem(-1, "Any rarity", "")
-                _metadata.value["rarities"] = tempResult
+                tempResult[-1] = MetadataItem(-1, ALL_RARITIES, "")
+                _metadata.value[METADATA_RARITIES_NAME] = tempResult
             }
         }
-        fetchMetadata("classes") { result ->
+        fetchMetadata(METADATA_CLASSES_NAME) { result ->
             if (result != null) {
                 val tempResult = HashMap(result)
-                tempResult[-1] = MetadataItem(-1, "Any class", "")
-                _metadata.value["classes"] = tempResult
+                tempResult[-1] = MetadataItem(-1, ALL_CLASSES, "")
+                _metadata.value[METADATA_CLASSES_NAME] = tempResult
             }
         }
-        fetchMetadata("types") { result ->
+        fetchMetadata(METADATA_TYPES_NAME) { result ->
             if (result != null) {
                 val tempResult = HashMap(result)
-                tempResult[-1] = MetadataItem(-1, "Any type", "")
-                _metadata.value["types"] = tempResult
+                tempResult[-1] = MetadataItem(-1, ALL_TYPES, "")
+                _metadata.value[METADATA_TYPES_NAME] = tempResult
             }
         }
     }
@@ -209,7 +219,7 @@ class BattleNetViewModel : ViewModel() {
     private fun fetchMetadata(
         type: String,
         callback: (Map<Int, MetadataItem>?) -> Unit,
-    ) { //
+    ) {
         authenticator.getAccessToken { token ->
 
             if (token == null) {

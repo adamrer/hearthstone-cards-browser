@@ -48,10 +48,8 @@ class BattleNetViewModel : ViewModel() {
     private val client = OkHttpClient()
     private val baseUrl = BASE_URL
     private val locale = LOCALE
-    private val clientId = CLIENT_ID
-    private val clientSecret = CLIENT_SECRET
 
-    private val authenticator = BattleNetAuthenticator(clientId, clientSecret)
+    private val authenticator = BattleNetAuthenticator
 
     fun searchCards(cardRequest: CardRequest) {
         _isLoading.value = true

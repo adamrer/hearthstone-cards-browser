@@ -1,5 +1,7 @@
 package com.example.hearthstonecardsbrowser.api
 
+import com.example.hearthstonecardsbrowser.Constants.CLIENT_ID
+import com.example.hearthstonecardsbrowser.Constants.CLIENT_SECRET
 import okhttp3.Callback
 import okhttp3.Call
 import okhttp3.Credentials
@@ -10,12 +12,19 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 
-class BattleNetAuthenticator (
-    private val clientId: String,
-    private val clientSecret: String
-) {
+object BattleNetAuthenticator {
     private var accessToken: String? = null
     private val client = OkHttpClient()
+    private var clientId: String = CLIENT_ID
+    private var clientSecret: String = CLIENT_SECRET
+
+    fun setClientId(newClientId: String){
+        clientId = newClientId
+    }
+
+    fun setClientSecret(newClientSecret: String){
+        clientSecret = newClientSecret
+    }
 
     fun getAccessToken(callback: (String?) -> Unit) {
         if (accessToken != null){

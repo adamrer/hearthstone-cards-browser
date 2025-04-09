@@ -33,6 +33,7 @@ object Constants {
 
     // LE SECRET
     const val BASE_URL = "https://us.api.blizzard.com/hearthstone/cards"
+    const val METADATA_URL = "https://us.api.blizzard.com/hearthstone/metadata"
     const val LOCALE = "en_US"
     const val CLIENT_ID = "38254a25f2814cb4bb94ade89f3d6a6d"
     const val CLIENT_SECRET = "eFrAlzvVXrELx9RY2073aam8Wz1lsrl9"

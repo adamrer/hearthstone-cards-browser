@@ -49,7 +49,6 @@ import com.example.hearthstonecardsbrowser.Constants.ALL_RARITIES
 import com.example.hearthstonecardsbrowser.Constants.ALL_TYPES
 import com.example.hearthstonecardsbrowser.Constants.ATTACK_ATTR
 import com.example.hearthstonecardsbrowser.Constants.CARD_DETAIL_NAVIGATION
-import com.example.hearthstonecardsbrowser.Constants.CARD_NAME
 import com.example.hearthstonecardsbrowser.Constants.CLASS_ATTR
 import com.example.hearthstonecardsbrowser.Constants.CLASS_FILTER_NAME
 import com.example.hearthstonecardsbrowser.Constants.DATA_ADDED_ATTR
@@ -58,7 +57,6 @@ import com.example.hearthstonecardsbrowser.Constants.GROUP_BY_CLASS_ATTR
 import com.example.hearthstonecardsbrowser.Constants.HEALTH_ATTR
 import com.example.hearthstonecardsbrowser.Constants.MANA_COST_ATTR
 import com.example.hearthstonecardsbrowser.Constants.METADATA_CLASSES_NAME
-import com.example.hearthstonecardsbrowser.Constants.METADATA_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_RARITIES_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_TYPES_NAME
 import com.example.hearthstonecardsbrowser.Constants.NAME_ATTR
@@ -313,9 +311,7 @@ fun CardGridScreen(
     LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(8.dp)) {
         items(cards) { card ->
             CardItem(card) {
-                navController.currentBackStackEntry?.savedStateHandle?.set(CARD_NAME, card)
-                navController.currentBackStackEntry?.savedStateHandle?.set(METADATA_NAME, metadata)
-                navController.navigate(CARD_DETAIL_NAVIGATION)
+                navController.navigate("$CARD_DETAIL_NAVIGATION/${card.id}")
             }
         }
     }

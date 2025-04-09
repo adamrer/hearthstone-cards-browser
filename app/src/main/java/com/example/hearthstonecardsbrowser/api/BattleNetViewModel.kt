@@ -10,8 +10,6 @@ import com.example.hearthstonecardsbrowser.Constants.ALL_CLASSES
 import com.example.hearthstonecardsbrowser.Constants.ALL_RARITIES
 import com.example.hearthstonecardsbrowser.Constants.ALL_TYPES
 import com.example.hearthstonecardsbrowser.Constants.BASE_URL
-import com.example.hearthstonecardsbrowser.Constants.CLIENT_ID
-import com.example.hearthstonecardsbrowser.Constants.CLIENT_SECRET
 import com.example.hearthstonecardsbrowser.Constants.LOCALE
 import com.example.hearthstonecardsbrowser.Constants.METADATA_CLASSES_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_RARITIES_NAME

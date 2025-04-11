@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.hearthstonecardsbrowser.Constants.ALL_CLASSES
@@ -71,6 +72,7 @@ import com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
+import com.example.hearthstonecardsbrowser.viewmodels.ViewModelResponseState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -79,6 +81,10 @@ fun CardsPage(
     navController: NavController,
     modifier: Modifier,
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loadMetadata()
+    }
+
     val keyboardController = LocalSoftwareKeyboardController.current
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
 
@@ -100,19 +106,16 @@ fun CardsPage(
 
     var page by remember { mutableIntStateOf(savedStateHandle?.get<Int>(PAGE_NAME) ?: 1) }
     val pageCount by viewModel.pageCount
-    val cards by viewModel.cards
-    val metadata by viewModel.metadata
-    val errorMessage by viewModel.errorMessage
-    val isLoading by viewModel.isLoading
 
-    LaunchedEffect(Unit) { viewModel.searchMetadata() }
+    val cardsState by viewModel.cards.collectAsStateWithLifecycle()
+    val metadataState by viewModel.metadata.collectAsStateWithLifecycle()
 
     val cardRequest =
         CardRequest(null, classFilter.slug, typeFilter.slug, rarityFilter.slug, textFilter, null, sortBy.slug, descending, page, 20)
 
     fun loadCards() {
         cardRequest.page = page
-        viewModel.searchCards(cardRequest)
+        viewModel.loadCards(cardRequest)
     }
 
     LaunchedEffect(textFilter, classFilter, typeFilter, rarityFilter, sortBy, descending, page) {
@@ -162,24 +165,29 @@ fun CardsPage(
 
                 AnimatedVisibility(visible = isFiltersExpanded) {
                     Column {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            MetadataDropDownMenu(metadata[METADATA_CLASSES_NAME], classFilter) { classFilter = it }
-                            MetadataDropDownMenu(metadata[METADATA_TYPES_NAME], typeFilter) { typeFilter = it }
-                            MetadataDropDownMenu(metadata[METADATA_RARITIES_NAME], rarityFilter) { rarityFilter = it }
-                        }
 
-                        FlowRow(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier =
-                                Modifier
-                                    .padding(top = 8.dp)
-                                    .fillMaxWidth(),
-                        ) {
+                        when (val metadState = metadataState){
+                            is ViewModelResponseState.Idle -> Unit
+                            is ViewModelResponseState.Success ->
+                            {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    MetadataDropDownMenu(metadState.content[METADATA_CLASSES_NAME], classFilter) { classFilter = it }
+                                    MetadataDropDownMenu(metadState.content[METADATA_TYPES_NAME], typeFilter) { typeFilter = it }
+                                    MetadataDropDownMenu(metadState.content[METADATA_RARITIES_NAME], rarityFilter) { rarityFilter = it }
+                                }
+
+                                FlowRow(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier =
+                                        Modifier
+                                            .padding(top = 8.dp)
+                                            .fillMaxWidth(),
+                                ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier =
@@ -224,6 +232,19 @@ fun CardsPage(
                                 )
                             }
                         }
+                            }
+                            is ViewModelResponseState.Error ->
+                                Text(
+                                    text = "Sorry, we have encountered an error: " + metadState.error,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(horizontal = 24.dp)
+                                )
+                            ViewModelResponseState.Loading ->
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
+
                     }
                 }
 
@@ -244,15 +265,10 @@ fun CardsPage(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when {
-            isLoading -> CircularProgressIndicator()
-            errorMessage.isNotEmpty() ->
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp),
-                )
-            else -> {
+
+        when (val cardState = cardsState) {
+            is ViewModelResponseState.Idle -> Unit
+            is ViewModelResponseState.Success ->
                 Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -275,9 +291,32 @@ fun CardsPage(
                             }
                         }
                     }
-                    CardGridScreen(cards, navController, metadata)
+                    when (val metaState = metadataState){
+                        is ViewModelResponseState.Idle -> Unit
+                        is ViewModelResponseState.Success ->
+                            CardGridScreen(cardState.content, navController, metaState.content)
+                        is ViewModelResponseState.Error ->
+                            Text(
+                                text = "Sorry, we have encountered an error: " + metaState.error,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(horizontal = 24.dp)
+                            )
+                        is ViewModelResponseState.Loading ->
+                            CircularProgressIndicator()
+                    }
                 }
-            }
+            is ViewModelResponseState.Error ->
+                Text(
+                    text = "Sorry, we have encountered an error: " + cardState.error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = 24.dp)
+                )
+            is ViewModelResponseState.Loading ->
+                CircularProgressIndicator()
         }
     }
 }

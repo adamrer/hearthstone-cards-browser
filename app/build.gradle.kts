@@ -54,6 +54,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation ("androidx.navigation:navigation-compose:2.7.5")
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

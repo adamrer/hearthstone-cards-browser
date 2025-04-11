@@ -1,4 +1,4 @@
-package com.example.hearthstonecardsbrowser.api
+package com.example.hearthstonecardsbrowser.repository
 
 import com.example.hearthstonecardsbrowser.Constants.CLIENT_ID
 import com.example.hearthstonecardsbrowser.Constants.CLIENT_SECRET
@@ -27,10 +27,6 @@ object BattleNetAuthenticator {
     }
 
     fun getAccessToken(callback: (String?) -> Unit) {
-        if (accessToken != null){
-            callback(accessToken)
-            return
-        }
 
         val url = "https://oauth.battle.net/token"
         val credentials = Credentials.basic(clientId, clientSecret)
@@ -43,6 +39,7 @@ object BattleNetAuthenticator {
             .header("Content-type", "application/x-www-form-urlencoded")
             .post(requestBody)
             .build()
+
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException){

@@ -1,6 +1,9 @@
 package com.example.hearthstonecardsbrowser.ui.data
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class HearthstoneCard(
     val id: Int?,
     val collectible: Int?,
@@ -18,4 +21,4 @@ data class HearthstoneCard(
     val text: String?,
     val image: String?,
     val cropImage: String?,
-)
+) : Parcelable

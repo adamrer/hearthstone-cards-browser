@@ -67,7 +67,7 @@ import com.example.hearthstonecardsbrowser.Constants.RARITY_FILTER_NAME
 import com.example.hearthstonecardsbrowser.Constants.SORT_BY_NAME
 import com.example.hearthstonecardsbrowser.Constants.TEXT_FILTER_NAME
 import com.example.hearthstonecardsbrowser.Constants.TYPE_FILTER_NAME
-import com.example.hearthstonecardsbrowser.api.BattleNetViewModel
+import com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard

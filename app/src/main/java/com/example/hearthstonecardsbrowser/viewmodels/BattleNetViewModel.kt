@@ -1,4 +1,4 @@
-package com.example.hearthstonecardsbrowser.api
+package com.example.hearthstonecardsbrowser.viewmodels
 
 import android.net.Uri
 import androidx.compose.runtime.MutableState
@@ -10,12 +10,13 @@ import com.example.hearthstonecardsbrowser.Constants.ALL_CLASSES
 import com.example.hearthstonecardsbrowser.Constants.ALL_RARITIES
 import com.example.hearthstonecardsbrowser.Constants.ALL_TYPES
 import com.example.hearthstonecardsbrowser.Constants.BASE_URL
-import com.example.hearthstonecardsbrowser.Constants.CLIENT_ID
-import com.example.hearthstonecardsbrowser.Constants.CLIENT_SECRET
 import com.example.hearthstonecardsbrowser.Constants.LOCALE
 import com.example.hearthstonecardsbrowser.Constants.METADATA_CLASSES_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_RARITIES_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_TYPES_NAME
+import com.example.hearthstonecardsbrowser.api.BattleNetAuthenticator
+import com.example.hearthstonecardsbrowser.api.CardRequest
+import com.example.hearthstonecardsbrowser.api.MetadataItem
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
 import okhttp3.Call
 import okhttp3.Callback
@@ -165,7 +166,7 @@ class BattleNetViewModel : ViewModel() {
         filter: CardRequest,
         callback: (List<HearthstoneCard>?, Int?, Int?) -> Unit,
     ) {
-        authenticator.getAccessToken { token ->
+        BattleNetAuthenticator.getAccessToken { token ->
             if (token == null) {
                 callback(null, null, null)
             } else {
@@ -218,7 +219,7 @@ class BattleNetViewModel : ViewModel() {
         type: String,
         callback: (Map<Int, MetadataItem>?) -> Unit,
     ) {
-        authenticator.getAccessToken { token ->
+        BattleNetAuthenticator.getAccessToken { token ->
 
             if (token == null) {
                 callback(null)

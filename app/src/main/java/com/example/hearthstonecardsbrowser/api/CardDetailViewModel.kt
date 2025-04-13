@@ -1,22 +1,13 @@
 package com.example.hearthstonecardsbrowser.api
 
-import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.hearthstonecardsbrowser.Constants.BASE_URL
-import com.example.hearthstonecardsbrowser.Constants.LOCALE
 import com.example.hearthstonecardsbrowser.repository.BattleNetAuthenticator
-import com.example.hearthstonecardsbrowser.ui.data.CardDetail
 import com.example.hearthstonecardsbrowser.repository.CardsRepository
 import com.example.hearthstonecardsbrowser.repository.Repository
-import okhttp3.Call
-import okhttp3.Callback
+import com.example.hearthstonecardsbrowser.ui.data.CardDetail
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
 
 class CardDetailViewModel : ViewModel() {
     private val _cardDetail = mutableStateOf<CardDetail?>(null)
@@ -44,21 +35,14 @@ class CardDetailViewModel : ViewModel() {
 
     fun findCardById(id: String) {
         _isLoading.value = true
-        cardsRepository.getCard(id){ cardResult ->
+        cardsRepository.getCard(id) { cardResult ->
             if (cardResult != null) {
                 _cardDetail.value = cardResult
-                cardResult.className?.let { findClassName(it) }
-                cardResult.rarity?.let { findRaritiesName(it) }
-                cardResult.type?.let { findTypesName(it) }
-                _isLoading.value = false
-            } else {
-                _isLoading.value = false
-            }
-        }
-        getCard(id) { cardResult ->
-            if (cardResult != null) {
-                _cardDetail.value = cardResult
-                cardResult.className?.let { findClassName(it) }
+                if (cardResult.className != "null") {
+                    cardResult.className?.let { findClassName(it) }
+                } else {
+                    cardResult.multiClassIds?.let { findClassesNames(it) }
+                }
                 cardResult.rarity?.let { findRaritiesName(it) }
                 cardResult.type?.let { findTypesName(it) }
                 _isLoading.value = false
@@ -76,6 +60,15 @@ class CardDetailViewModel : ViewModel() {
         }
     }
 
+    private fun findClassesNames(ids: List<String>) {
+        cardsRepository.getMetadata("classes") { classesResult ->
+            if (classesResult != null) {
+                _className.value =
+                    classesResult.filter { e -> ids.contains(e.key.toString()) }.map { e -> e.value.name }.joinToString("\n")
+            }
+        }
+    }
+
     private fun findRaritiesName(id: String) {
         cardsRepository.getMetadata("rarities") { raritiesResult ->
             if (raritiesResult != null) {
@@ -88,74 +81,6 @@ class CardDetailViewModel : ViewModel() {
         cardsRepository.getMetadata("types") { typesResult ->
             if (typesResult != null) {
                 _typeName.value = typesResult[Integer.parseInt(id)]?.name
-            }
-        }
-    }
-
-
-
-    private fun buildCardUrl(id: String): String {
-        val builder = Uri.parse(BASE_URL).buildUpon()
-        builder.appendPath(id)
-        builder.appendQueryParameter("locale", LOCALE)
-        return builder.build().toString()
-    }
-
-    private fun cardFromJson(cardJson: JSONObject): CardDetail =
-        CardDetail(
-            id = cardJson.optString("id"),
-            name = cardJson.optString("name"),
-            className = cardJson.optString("classId"),
-            type = cardJson.optString("cardTypeId"),
-            rarity = cardJson.optString("rarityId"),
-            artist = cardJson.optString("artistName"),
-            collectible = cardJson.optString("collectible"),
-            flavorText = cardJson.optString("flavorText"),
-            image = cardJson.optString("image"),
-        )
-
-    private fun getCard(
-        id: String,
-        callback: (CardDetail?) -> Unit,
-    ) {
-        authenticator.getAccessToken { token ->
-            if (token == null) {
-                callback(null)
-            } else {
-                val request =
-                    Request
-                        .Builder()
-                        .url(buildCardUrl(id))
-                        .header("Authorization", "Bearer $token")
-                        .build()
-
-                client.newCall(request).enqueue(
-                    object : Callback {
-                        override fun onFailure(
-                            call: Call,
-                            e: IOException,
-                        ) {
-                            e.printStackTrace()
-                            callback(null)
-                        }
-
-                        override fun onResponse(
-                            call: Call,
-                            response: Response,
-                        ) {
-                            response.use {
-                                if (!response.isSuccessful) {
-                                    callback(null)
-                                    return
-                                }
-
-                                val json = JSONObject(response.body?.string() ?: "{}")
-                                val card = cardFromJson(json)
-                                callback(card)
-                            }
-                        }
-                    },
-                )
             }
         }
     }

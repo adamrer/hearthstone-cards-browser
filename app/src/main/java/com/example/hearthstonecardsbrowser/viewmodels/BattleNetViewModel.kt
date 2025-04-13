@@ -93,17 +93,16 @@ class BattleNetViewModel : ViewModel() {
         _cards.value = ViewModelResponseState.Loading
 
         cardsRepository.getCards(cardRequest) { cardsResult, _, pageCount ->
-            if (cardsResult != null && pageCount != null){
-                _cards.value = ViewModelResponseState.Success(cardsResult)
-                _pageCount.intValue = pageCount
-            }
-            else if (cardsResult != null && cardsResult.isEmpty()) {
-                _cards.value = ViewModelResponseState.Error(404)
-            }
-            else {
+            if (cardsResult == null) {
                 _cards.value = ViewModelResponseState.Error(500)
+            } else {
+                if (cardsResult.isEmpty()) {
+                    _cards.value = ViewModelResponseState.Error(404)
+                } else if (pageCount != null) {
+                    _cards.value = ViewModelResponseState.Success(cardsResult)
+                    _pageCount.intValue = pageCount
+                }
             }
-
         }
     }
 }

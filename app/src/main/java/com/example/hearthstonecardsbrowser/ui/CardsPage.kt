@@ -296,7 +296,18 @@ fun CardsPage(
                             .padding(horizontal = 24.dp),
                 )
             is ViewModelResponseState.Loading ->
-                CircularProgressIndicator()
+            {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+            }
         }
     }
 }

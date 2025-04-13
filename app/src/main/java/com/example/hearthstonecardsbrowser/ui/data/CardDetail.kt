@@ -2,6 +2,7 @@ package com.example.hearthstonecardsbrowser.ui.data
 
 data class CardDetail(
     val id: String?,
+    val multiClassIds: List<String>?,
     val name: String?,
     val className: String?,
     val type: String?,

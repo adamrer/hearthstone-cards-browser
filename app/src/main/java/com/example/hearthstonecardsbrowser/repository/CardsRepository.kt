@@ -259,6 +259,11 @@ class CardsRepository: Repository {
             collectible = cardJson.optString("collectible"),
             flavorText = cardJson.optString("flavorText"),
             image = cardJson.optString("image"),
+            multiClassIds =
+                cardJson
+                    .optJSONArray(
+                        "multiClassIds",
+                    )?.let { 0.until(it.length()).mapTo(mutableListOf()) { i -> it.optString(i) } },
         )
 
 }

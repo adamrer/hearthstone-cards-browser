@@ -43,7 +43,7 @@ fun CardDetailPage(
 ) {
     viewModel.findCardById(cardId)
 
-    val cardState by viewModel.card.collectAsStateWithLifecycle()
+    val cardState by viewModel.cardDetail.collectAsStateWithLifecycle()
     val className by viewModel.className
     val rarityName by viewModel.rarityName
     val typeName by viewModel.typeName
@@ -58,100 +58,100 @@ fun CardDetailPage(
                     .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            when (val card = cardState){
+            when (val card = cardState) {
                 is ViewModelResponseState.Idle -> Unit
                 is ViewModelResponseState.Success ->
-                {
-                    Card(
-                        modifier =
-                        Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                    {
+                        Card(
+                            modifier =
+                                Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                Text(
-                                    text = card.content.name ?: "Unknown Card",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-
-                            val image: Painter = rememberAsyncImagePainter(card.content.image)
-
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Image(
-                                    painter = image,
-                                    contentDescription = card.content.name,
-                                    modifier =
-                                    Modifier
-                                        .width(200.dp)
-                                        .height(280.dp)
-                                        .clip(RoundedCornerShape(12.dp)),
-                                    contentScale = ContentScale.Fit,
-                                )
-                            }
-
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                card.content.flavorText.let {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
                                     Text(
-                                        text = "\"$it\"",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.padding(top = 8.dp),
+                                        text = card.content.name ?: "Unknown Card",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.Bold,
                                         textAlign = TextAlign.Center,
-                                        fontStyle = FontStyle.Italic,
                                     )
                                 }
-                            }
 
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                DetailItem("Class", className)
-                                DetailItem("Type", typeName)
-                                DetailItem("Rarity", rarityName)
-                                DetailItem("Artist", card.content.artist)
-                                DetailItem("Collectible", if (card.content.collectible == "1") "Yes" else "No")
+                                val image: Painter = rememberAsyncImagePainter(card.content.image)
+
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Image(
+                                        painter = image,
+                                        contentDescription = card.content.name,
+                                        modifier =
+                                            Modifier
+                                                .width(200.dp)
+                                                .height(280.dp)
+                                                .clip(RoundedCornerShape(12.dp)),
+                                        contentScale = ContentScale.Fit,
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    card.content.flavorText.let {
+                                        Text(
+                                            text = "\"$it\"",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(top = 8.dp),
+                                            textAlign = TextAlign.Center,
+                                            fontStyle = FontStyle.Italic,
+                                        )
+                                    }
+                                }
+
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    DetailItem("Class", className)
+                                    DetailItem("Type", typeName)
+                                    DetailItem("Rarity", rarityName)
+                                    DetailItem("Artist", card.content.artist)
+                                    DetailItem("Collectible", if (card.content.collectible == "1") "Yes" else "No")
+                                }
                             }
                         }
                     }
-                }
                 is ViewModelResponseState.Error ->
                     Text(
                         text = "Sorry, we have encountered an error: " + card.error,
                         color = MaterialTheme.colorScheme.error,
                         modifier =
-                        Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(horizontal = 24.dp),
+                            Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(horizontal = 24.dp),
                     )
                 ViewModelResponseState.Loading ->
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)) {
+                            modifier =
+                                Modifier
+                                    .align(Alignment.CenterHorizontally),
+                        ) {
                             CircularProgressIndicator()
                         }
                     }
-
             }
-
         }
     }
 }

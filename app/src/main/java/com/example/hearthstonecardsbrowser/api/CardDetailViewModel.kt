@@ -1,31 +1,21 @@
 package com.example.hearthstonecardsbrowser.api
 
-import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.hearthstonecardsbrowser.Constants.BASE_URL
-import com.example.hearthstonecardsbrowser.Constants.LOCALE
 import com.example.hearthstonecardsbrowser.repository.BattleNetAuthenticator
-import com.example.hearthstonecardsbrowser.ui.data.CardDetail
 import com.example.hearthstonecardsbrowser.repository.CardsRepository
 import com.example.hearthstonecardsbrowser.repository.Repository
+import com.example.hearthstonecardsbrowser.ui.data.CardDetail
 import com.example.hearthstonecardsbrowser.viewmodels.ViewModelResponseState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
 
 class CardDetailViewModel : ViewModel() {
-
     private val _cardDetail: MutableStateFlow<ViewModelResponseState<CardDetail, Int>> =
         MutableStateFlow(ViewModelResponseState.Idle)
-    val card: StateFlow<ViewModelResponseState<CardDetail, Int>>
+    val cardDetail: StateFlow<ViewModelResponseState<CardDetail, Int>>
         get() = this._cardDetail
 
     private val _className = mutableStateOf<String?>(null)
@@ -47,7 +37,7 @@ class CardDetailViewModel : ViewModel() {
 
     fun findCardById(id: String) {
         _cardDetail.value = ViewModelResponseState.Loading
-        cardsRepository.getCard(id){ cardResult ->
+        cardsRepository.getCard(id) { cardResult ->
             if (cardResult != null) {
                 this._cardDetail.value = ViewModelResponseState.Success(cardResult)
                 if (cardResult.className != "null") {
@@ -57,7 +47,7 @@ class CardDetailViewModel : ViewModel() {
                 }
                 cardResult.rarity?.let { findRaritiesName(it) }
                 cardResult.type?.let { findTypesName(it) }
-            } else  {
+            } else {
                 this._cardDetail.value = ViewModelResponseState.Error(404)
             }
         }

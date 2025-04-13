@@ -58,12 +58,13 @@ import com.example.hearthstonecardsbrowser.Constants.NAME_ATTR
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
-import com.example.hearthstonecardsbrowser.viewmodels.ViewModelResponseState
+import com.example.hearthstonecardsbrowser.ui.viewmodels.BattleNetViewModel
+import com.example.hearthstonecardsbrowser.ui.viewmodels.ViewModelResponseState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CardsPage(
-    viewModel: com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel,
+    viewModel: BattleNetViewModel,
     navController: NavController,
     modifier: Modifier,
 ) {
@@ -296,18 +297,19 @@ fun CardsPage(
                             .padding(horizontal = 24.dp),
                 )
             is ViewModelResponseState.Loading ->
-            {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)) {
-                        CircularProgressIndicator()
+                {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier =
+                                Modifier
+                                    .align(Alignment.CenterHorizontally),
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
                 }
-
-            }
         }
     }
 }

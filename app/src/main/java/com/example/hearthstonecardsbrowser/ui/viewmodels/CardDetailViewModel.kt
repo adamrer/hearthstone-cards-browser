@@ -1,4 +1,4 @@
-package com.example.hearthstonecardsbrowser.api
+package com.example.hearthstonecardsbrowser.ui.viewmodels
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -7,7 +7,6 @@ import com.example.hearthstonecardsbrowser.repository.BattleNetAuthenticator
 import com.example.hearthstonecardsbrowser.repository.CardsRepository
 import com.example.hearthstonecardsbrowser.repository.Repository
 import com.example.hearthstonecardsbrowser.ui.data.CardDetail
-import com.example.hearthstonecardsbrowser.viewmodels.ViewModelResponseState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient

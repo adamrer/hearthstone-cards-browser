@@ -33,8 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
-import com.example.hearthstonecardsbrowser.api.CardDetailViewModel
-import com.example.hearthstonecardsbrowser.viewmodels.ViewModelResponseState
+import com.example.hearthstonecardsbrowser.ui.viewmodels.CardDetailViewModel
+import com.example.hearthstonecardsbrowser.ui.viewmodels.ViewModelResponseState
 
 @Composable
 fun CardDetailPage(

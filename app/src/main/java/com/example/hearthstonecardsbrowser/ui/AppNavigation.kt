@@ -8,10 +8,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.hearthstonecardsbrowser.Constants.CARD_DETAIL_NAVIGATION
 import com.example.hearthstonecardsbrowser.Constants.CARD_LIST_NAVIGATION
-import com.example.hearthstonecardsbrowser.api.CardDetailViewModel
 import com.example.hearthstonecardsbrowser.ui.CardDetailPage
 import com.example.hearthstonecardsbrowser.ui.CardsPage
-import com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel
+import com.example.hearthstonecardsbrowser.ui.viewmodels.BattleNetViewModel
+import com.example.hearthstonecardsbrowser.ui.viewmodels.CardDetailViewModel
 
 @Composable
 fun AppNavigation() {

@@ -3,8 +3,10 @@ package com.example.hearthstonecardsbrowser.repository
 import android.net.Uri
 import com.example.hearthstonecardsbrowser.Constants.BASE_URL
 import com.example.hearthstonecardsbrowser.Constants.LOCALE
+import com.example.hearthstonecardsbrowser.Constants.METADATA_URL
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
+import com.example.hearthstonecardsbrowser.ui.data.CardDetail
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
 import okhttp3.Call
 import okhttp3.Callback
@@ -74,6 +76,13 @@ class CardsRepository: Repository {
 
     }
 
+    private fun buildMetadataUrl(type: String): String {
+        val builder = Uri.parse(METADATA_URL).buildUpon()
+        builder.appendPath(type)
+        builder.appendQueryParameter("locale", LOCALE)
+        return builder.build().toString()
+    }
+
     override fun getMetadata(
         type: String,
         callback: (Map<Int, MetadataItem>?) -> Unit
@@ -86,12 +95,11 @@ class CardsRepository: Repository {
             if (token == null) {
                 errorMessage = "Invalid access token"
             } else {
-                val url = "https://us.api.blizzard.com/hearthstone/metadata/$type?locale=$locale"
 
                 val request =
                     Request
                         .Builder()
-                        .url(url)
+                        .url(buildMetadataUrl(type))
                         .header("Authorization", "Bearer $token")
                         .build()
 
@@ -125,6 +133,58 @@ class CardsRepository: Repository {
 
     }
 
+    private fun buildCardUrl(id: String): String {
+        val builder = Uri.parse(BASE_URL).buildUpon()
+        builder.appendPath(id)
+        builder.appendQueryParameter("locale", LOCALE)
+        return builder.build().toString()
+    }
+
+    override fun getCard(
+        id: String,
+        callback: (CardDetail?) -> Unit,
+    ) {
+        authenticator.getAccessToken { token ->
+            if (token == null) {
+                callback(null)
+            } else {
+                val request =
+                    Request
+                        .Builder()
+                        .url(buildCardUrl(id))
+                        .header("Authorization", "Bearer $token")
+                        .build()
+
+                client.newCall(request).enqueue(
+                    object : Callback {
+                        override fun onFailure(
+                            call: Call,
+                            e: IOException,
+                        ) {
+                            e.printStackTrace()
+                            callback(null)
+                        }
+
+                        override fun onResponse(
+                            call: Call,
+                            response: Response,
+                        ) {
+                            response.use {
+                                if (!response.isSuccessful) {
+                                    callback(null)
+                                    return
+                                }
+
+                                val json = JSONObject(response.body?.string() ?: "{}")
+                                val card = cardDetailFromJson(json)
+                                callback(card)
+                            }
+                        }
+                    },
+                )
+            }
+        }
+    }
     private fun buildUrl(request: CardRequest): String {
         val builder = Uri.parse(baseUrl).buildUpon()
         builder.appendQueryParameter("locale", locale)
@@ -188,6 +248,17 @@ class CardsRepository: Repository {
             cropImage = cardJson.optString("cropImage"),
             flavorText = cardJson.optString("flavorText"),
         )
-
+    private fun cardDetailFromJson(cardJson: JSONObject): CardDetail =
+        CardDetail(
+            id = cardJson.optString("id"),
+            name = cardJson.optString("name"),
+            className = cardJson.optString("classId"),
+            type = cardJson.optString("cardTypeId"),
+            rarity = cardJson.optString("rarityId"),
+            artist = cardJson.optString("artistName"),
+            collectible = cardJson.optString("collectible"),
+            flavorText = cardJson.optString("flavorText"),
+            image = cardJson.optString("image"),
+        )
 
 }

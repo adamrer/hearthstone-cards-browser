@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,23 +30,20 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.hearthstonecardsbrowser.Constants.CARD_NAME
-import com.example.hearthstonecardsbrowser.Constants.METADATA_CLASSES_NAME
-import com.example.hearthstonecardsbrowser.Constants.METADATA_NAME
-import com.example.hearthstonecardsbrowser.Constants.METADATA_RARITIES_NAME
-import com.example.hearthstonecardsbrowser.Constants.METADATA_TYPES_NAME
-import com.example.hearthstonecardsbrowser.api.MetadataItem
-import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
+import com.example.hearthstonecardsbrowser.api.CardDetailViewModel
 
 @Composable
-fun CardDetailPage(navController: NavController) {
-    val card = navController.previousBackStackEntry?.savedStateHandle?.get<HearthstoneCard>(CARD_NAME)
-    val metadata =
-        navController.previousBackStackEntry?.savedStateHandle?.get<Map<String, Map<Int, MetadataItem>>>(
-            METADATA_NAME,
-        )
+fun CardDetailPage(
+    cardId: String,
+    viewModel: CardDetailViewModel,
+) {
+    viewModel.findCardById(cardId)
+
+    val card by viewModel.cardDetail
+    val className by viewModel.className
+    val rarityName by viewModel.rarityName
+    val typeName by viewModel.typeName
 
     Scaffold { padding ->
         Column(
@@ -116,11 +114,11 @@ fun CardDetailPage(navController: NavController) {
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        DetailItem("Class", metadata?.get(METADATA_CLASSES_NAME)?.get(card?.classId)?.name)
-                        DetailItem("Type", metadata?.get(METADATA_TYPES_NAME)?.get(card?.cardTypeId)?.name)
-                        DetailItem("Rarity", metadata?.get(METADATA_RARITIES_NAME)?.get(card?.rarityId)?.name)
-                        DetailItem("Artist", card?.artistName)
-                        DetailItem("Collectible", if (card?.collectible == 1) "Yes" else "No")
+                        DetailItem("Class", className)
+                        DetailItem("Type", typeName)
+                        DetailItem("Rarity", rarityName)
+                        DetailItem("Artist", card?.artist)
+                        DetailItem("Collectible", if (card?.collectible == "1") "Yes" else "No")
                     }
                 }
             }

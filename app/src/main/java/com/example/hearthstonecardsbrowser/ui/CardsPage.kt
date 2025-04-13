@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,9 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.hearthstonecardsbrowser.Constants.ALL_CLASSES
-import com.example.hearthstonecardsbrowser.Constants.ALL_RARITIES
-import com.example.hearthstonecardsbrowser.Constants.ALL_TYPES
 import com.example.hearthstonecardsbrowser.Constants.ATTACK_ATTR
 import com.example.hearthstonecardsbrowser.Constants.CARD_DETAIL_NAVIGATION
 import com.example.hearthstonecardsbrowser.Constants.CARD_NAME
@@ -69,6 +65,7 @@ import com.example.hearthstonecardsbrowser.Constants.SORT_BY_NAME
 import com.example.hearthstonecardsbrowser.Constants.TEXT_FILTER_NAME
 import com.example.hearthstonecardsbrowser.Constants.TYPE_FILTER_NAME
 import com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel
+import com.example.hearthstonecardsbrowser.api.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
@@ -86,46 +83,28 @@ fun CardsPage(
     }
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
-
-    var textFilter by remember { mutableStateOf(savedStateHandle?.get<String>(TEXT_FILTER_NAME) ?: "") }
-    var classFilter by remember {
-        mutableStateOf(
-            savedStateHandle?.get<MetadataItem>(CLASS_FILTER_NAME) ?: MetadataItem(-1, ALL_CLASSES, ""),
-        )
-    }
-    var typeFilter by remember { mutableStateOf(savedStateHandle?.get<MetadataItem>(TYPE_FILTER_NAME) ?: MetadataItem(-1, ALL_TYPES, "")) }
-    var rarityFilter by remember {
-        mutableStateOf(
-            savedStateHandle?.get<MetadataItem>(RARITY_FILTER_NAME) ?: MetadataItem(-1, ALL_RARITIES, ""),
-        )
-    }
-    var sortBy by remember { mutableStateOf(savedStateHandle?.get<MetadataItem>(SORT_BY_NAME) ?: MetadataItem(6, "Name", "name")) }
-    var descending by remember { mutableStateOf(savedStateHandle?.get<Boolean>(DESCENDING_NAME) ?: false) }
-    var isFiltersExpanded by remember { mutableStateOf(false) }
-
-    var page by remember { mutableIntStateOf(savedStateHandle?.get<Int>(PAGE_NAME) ?: 1) }
     val pageCount by viewModel.pageCount
 
     val cardsState by viewModel.cards.collectAsStateWithLifecycle()
     val metadataState by viewModel.metadata.collectAsStateWithLifecycle()
 
     val cardRequest =
-        CardRequest(null, classFilter.slug, typeFilter.slug, rarityFilter.slug, textFilter, null, sortBy.slug, descending, page, 20)
+        CardRequest(
+            null,
+            viewModel.classFilter.slug,
+            viewModel.typeFilter.slug,
+            viewModel.rarityFilter.slug,
+            viewModel.textFilter,
+            null,
+            viewModel.sortBy.slug,
+            viewModel.descending,
+            viewModel.page,
+            20,
+        )
 
     fun loadCards() {
-        cardRequest.page = page
+        cardRequest.page = viewModel.page
         viewModel.loadCards(cardRequest)
-    }
-
-    LaunchedEffect(textFilter, classFilter, typeFilter, rarityFilter, sortBy, descending, page) {
-        savedStateHandle?.set(TEXT_FILTER_NAME, textFilter)
-        savedStateHandle?.set(CLASS_FILTER_NAME, classFilter)
-        savedStateHandle?.set(TYPE_FILTER_NAME, typeFilter)
-        savedStateHandle?.set(RARITY_FILTER_NAME, rarityFilter)
-        savedStateHandle?.set(SORT_BY_NAME, sortBy)
-        savedStateHandle?.set(DESCENDING_NAME, descending)
-        savedStateHandle?.set(PAGE_NAME, page)
     }
 
     Column(
@@ -152,18 +131,18 @@ fun CardsPage(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     OutlinedTextField(
-                        value = textFilter,
-                        onValueChange = { textFilter = it },
+                        value = viewModel.textFilter,
+                        onValueChange = { viewModel.textFilter = it },
                         label = { Text("Search") },
                         modifier = Modifier.weight(1f),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { isFiltersExpanded = !isFiltersExpanded }) {
-                        Text(if (isFiltersExpanded) "Hide Filters" else "Show Filters")
+                    Button(onClick = { viewModel.isFiltersExpanded = !viewModel.isFiltersExpanded }) {
+                        Text(if (viewModel.isFiltersExpanded) "Hide Filters" else "Show Filters")
                     }
                 }
 
-                AnimatedVisibility(visible = isFiltersExpanded) {
+                AnimatedVisibility(visible = viewModel.isFiltersExpanded) {
                     Column {
 
                         when (val metadState = metadataState){
@@ -175,9 +154,9 @@ fun CardsPage(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.Center,
                                 ) {
-                                    MetadataDropDownMenu(metadState.content[METADATA_CLASSES_NAME], classFilter) { classFilter = it }
-                                    MetadataDropDownMenu(metadState.content[METADATA_TYPES_NAME], typeFilter) { typeFilter = it }
-                                    MetadataDropDownMenu(metadState.content[METADATA_RARITIES_NAME], rarityFilter) { rarityFilter = it }
+                                    MetadataDropDownMenu(metadState.content[METADATA_CLASSES_NAME], viewModel.classFilter) { viewModel.classFilter = it }
+                                    MetadataDropDownMenu(metadState.content[METADATA_TYPES_NAME], viewModel.typeFilter) { viewModel.typeFilter = it }
+                                    MetadataDropDownMenu(metadState.content[METADATA_RARITIES_NAME], viewModel.rarityFilter) { viewModel.rarityFilter = it }
                                 }
 
                                 FlowRow(
@@ -207,8 +186,8 @@ fun CardsPage(
                                         5 to MetadataItem(5, "Class", CLASS_ATTR),
                                         6 to MetadataItem(6, "Name", NAME_ATTR),
                                     ),
-                                    sortBy,
-                                ) { sortBy = it }
+                                    viewModel.sortBy,
+                                ) { viewModel.sortBy = it }
                             }
 
                             Row(
@@ -219,15 +198,15 @@ fun CardsPage(
                                         .height(60.dp),
                             ) {
                                 Switch(
-                                    checked = descending,
-                                    onCheckedChange = { descending = it },
+                                    checked = viewModel.descending,
+                                    onCheckedChange = { viewModel.descending = it },
                                     modifier =
                                         Modifier
                                             .padding(horizontal = 10.dp),
                                 )
 
                                 Text(
-                                    text = if (descending) "Descending" else "Ascending",
+                                    text = if (viewModel.descending) "Descending" else "Ascending",
                                     modifier = Modifier.align(Alignment.CenterVertically),
                                 )
                             }
@@ -252,9 +231,9 @@ fun CardsPage(
                 Button(
                     onClick = {
                         keyboardController?.hide()
-                        page = 1
+                        viewModel.page = 1
                         loadCards()
-                        isFiltersExpanded = false
+                        viewModel.isFiltersExpanded = false
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -273,19 +252,22 @@ fun CardsPage(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
                     ) {
                         if (pageCount != 0) {
-                            if (page > 1) {
+                            if (viewModel.page > 1) {
                                 Button(onClick = {
-                                    page--
+                                    viewModel.page--
                                     loadCards()
                                 }) { Text("Prev") }
                             }
-                            Text("Page $page of $pageCount", Modifier.padding(horizontal = 16.dp))
-                            if (page < pageCount) {
+                            Text("Page ${viewModel.page} of $pageCount", Modifier.padding(horizontal = 16.dp))
+                            if (viewModel.page < pageCount) {
                                 Button(onClick = {
-                                    page++
+                                    viewModel.page++
                                     loadCards()
                                 }) { Text("Next") }
                             }
@@ -352,9 +334,7 @@ fun CardGridScreen(
     LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(8.dp)) {
         items(cards) { card ->
             CardItem(card) {
-                navController.currentBackStackEntry?.savedStateHandle?.set(CARD_NAME, card)
-                navController.currentBackStackEntry?.savedStateHandle?.set(METADATA_NAME, metadata)
-                navController.navigate(CARD_DETAIL_NAVIGATION)
+                navController.navigate("$CARD_DETAIL_NAVIGATION/${card.id}")
             }
         }
     }
@@ -376,7 +356,10 @@ fun CardItem(
             Image(
                 painter = rememberAsyncImagePainter(card.image),
                 contentDescription = card.name,
-                modifier = Modifier.fillMaxWidth().height(230.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(230.dp),
                 contentScale = ContentScale.Crop,
             )
             card.name?.let { Text(text = it, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.titleMedium) }

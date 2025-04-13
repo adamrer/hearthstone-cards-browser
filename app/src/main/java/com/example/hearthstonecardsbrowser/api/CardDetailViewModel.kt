@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.example.hearthstonecardsbrowser.Constants.BASE_URL
 import com.example.hearthstonecardsbrowser.Constants.LOCALE
 import com.example.hearthstonecardsbrowser.Constants.METADATA_URL
+import com.example.hearthstonecardsbrowser.repository.BattleNetAuthenticator
 import com.example.hearthstonecardsbrowser.ui.data.CardDetail
 import okhttp3.Call
 import okhttp3.Callback

@@ -46,26 +46,15 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.hearthstonecardsbrowser.Constants.ATTACK_ATTR
 import com.example.hearthstonecardsbrowser.Constants.CARD_DETAIL_NAVIGATION
-import com.example.hearthstonecardsbrowser.Constants.CARD_NAME
 import com.example.hearthstonecardsbrowser.Constants.CLASS_ATTR
-import com.example.hearthstonecardsbrowser.Constants.CLASS_FILTER_NAME
 import com.example.hearthstonecardsbrowser.Constants.DATA_ADDED_ATTR
-import com.example.hearthstonecardsbrowser.Constants.DESCENDING_NAME
 import com.example.hearthstonecardsbrowser.Constants.GROUP_BY_CLASS_ATTR
 import com.example.hearthstonecardsbrowser.Constants.HEALTH_ATTR
 import com.example.hearthstonecardsbrowser.Constants.MANA_COST_ATTR
 import com.example.hearthstonecardsbrowser.Constants.METADATA_CLASSES_NAME
-import com.example.hearthstonecardsbrowser.Constants.METADATA_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_RARITIES_NAME
 import com.example.hearthstonecardsbrowser.Constants.METADATA_TYPES_NAME
 import com.example.hearthstonecardsbrowser.Constants.NAME_ATTR
-import com.example.hearthstonecardsbrowser.Constants.PAGE_NAME
-import com.example.hearthstonecardsbrowser.Constants.RARITY_FILTER_NAME
-import com.example.hearthstonecardsbrowser.Constants.SORT_BY_NAME
-import com.example.hearthstonecardsbrowser.Constants.TEXT_FILTER_NAME
-import com.example.hearthstonecardsbrowser.Constants.TYPE_FILTER_NAME
-import com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel
-import com.example.hearthstonecardsbrowser.api.BattleNetViewModel
 import com.example.hearthstonecardsbrowser.api.CardRequest
 import com.example.hearthstonecardsbrowser.api.MetadataItem
 import com.example.hearthstonecardsbrowser.ui.data.HearthstoneCard
@@ -74,7 +63,7 @@ import com.example.hearthstonecardsbrowser.viewmodels.ViewModelResponseState
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CardsPage(
-    viewModel: BattleNetViewModel,
+    viewModel: com.example.hearthstonecardsbrowser.viewmodels.BattleNetViewModel,
     navController: NavController,
     modifier: Modifier,
 ) {
@@ -144,86 +133,94 @@ fun CardsPage(
 
                 AnimatedVisibility(visible = viewModel.isFiltersExpanded) {
                     Column {
-
-                        when (val metadState = metadataState){
+                        when (val metadState = metadataState) {
                             is ViewModelResponseState.Idle -> Unit
                             is ViewModelResponseState.Success ->
-                            {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                FlowRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Center,
-                                ) {
-                                    MetadataDropDownMenu(metadState.content[METADATA_CLASSES_NAME], viewModel.classFilter) { viewModel.classFilter = it }
-                                    MetadataDropDownMenu(metadState.content[METADATA_TYPES_NAME], viewModel.typeFilter) { viewModel.typeFilter = it }
-                                    MetadataDropDownMenu(metadState.content[METADATA_RARITIES_NAME], viewModel.rarityFilter) { viewModel.rarityFilter = it }
+                                {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center,
+                                    ) {
+                                        MetadataDropDownMenu(metadState.content[METADATA_CLASSES_NAME], viewModel.classFilter) {
+                                            viewModel.classFilter =
+                                                it
+                                        }
+                                        MetadataDropDownMenu(metadState.content[METADATA_TYPES_NAME], viewModel.typeFilter) {
+                                            viewModel.typeFilter =
+                                                it
+                                        }
+                                        MetadataDropDownMenu(metadState.content[METADATA_RARITIES_NAME], viewModel.rarityFilter) {
+                                            viewModel.rarityFilter =
+                                                it
+                                        }
+                                    }
+
+                                    FlowRow(
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier =
+                                            Modifier
+                                                .padding(top = 8.dp)
+                                                .fillMaxWidth(),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier =
+                                                Modifier
+                                                    .padding(vertical = 10.dp)
+                                                    .height(60.dp),
+                                        ) {
+                                            Text("Sort by:", modifier = Modifier.align(Alignment.CenterVertically))
+
+                                            MetadataDropDownMenu(
+                                                mapOf(
+                                                    0 to MetadataItem(0, "Mana Cost", MANA_COST_ATTR),
+                                                    1 to MetadataItem(1, "Attack", ATTACK_ATTR),
+                                                    2 to MetadataItem(2, "Health", HEALTH_ATTR),
+                                                    3 to MetadataItem(3, "Date Added", DATA_ADDED_ATTR),
+                                                    4 to MetadataItem(4, "Group by Class", GROUP_BY_CLASS_ATTR),
+                                                    5 to MetadataItem(5, "Class", CLASS_ATTR),
+                                                    6 to MetadataItem(6, "Name", NAME_ATTR),
+                                                ),
+                                                viewModel.sortBy,
+                                            ) { viewModel.sortBy = it }
+                                        }
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier =
+                                                Modifier
+                                                    .padding(vertical = 10.dp)
+                                                    .height(60.dp),
+                                        ) {
+                                            Switch(
+                                                checked = viewModel.descending,
+                                                onCheckedChange = { viewModel.descending = it },
+                                                modifier =
+                                                    Modifier
+                                                        .padding(horizontal = 10.dp),
+                                            )
+
+                                            Text(
+                                                text = if (viewModel.descending) "Descending" else "Ascending",
+                                                modifier = Modifier.align(Alignment.CenterVertically),
+                                            )
+                                        }
+                                    }
                                 }
-
-                                FlowRow(
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier =
-                                        Modifier
-                                            .padding(top = 8.dp)
-                                            .fillMaxWidth(),
-                                ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier
-                                        .padding(vertical = 10.dp)
-                                        .height(60.dp),
-                            ) {
-                                Text("Sort by:", modifier = Modifier.align(Alignment.CenterVertically))
-
-                                MetadataDropDownMenu(
-                                    mapOf(
-                                        0 to MetadataItem(0, "Mana Cost", MANA_COST_ATTR),
-                                        1 to MetadataItem(1, "Attack", ATTACK_ATTR),
-                                        2 to MetadataItem(2, "Health", HEALTH_ATTR),
-                                        3 to MetadataItem(3, "Date Added", DATA_ADDED_ATTR),
-                                        4 to MetadataItem(4, "Group by Class", GROUP_BY_CLASS_ATTR),
-                                        5 to MetadataItem(5, "Class", CLASS_ATTR),
-                                        6 to MetadataItem(6, "Name", NAME_ATTR),
-                                    ),
-                                    viewModel.sortBy,
-                                ) { viewModel.sortBy = it }
-                            }
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier
-                                        .padding(vertical = 10.dp)
-                                        .height(60.dp),
-                            ) {
-                                Switch(
-                                    checked = viewModel.descending,
-                                    onCheckedChange = { viewModel.descending = it },
-                                    modifier =
-                                        Modifier
-                                            .padding(horizontal = 10.dp),
-                                )
-
-                                Text(
-                                    text = if (viewModel.descending) "Descending" else "Ascending",
-                                    modifier = Modifier.align(Alignment.CenterVertically),
-                                )
-                            }
-                        }
-                            }
                             is ViewModelResponseState.Error ->
                                 Text(
                                     text = "Sorry, we have encountered an error: " + metadState.error,
                                     color = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                        .padding(horizontal = 24.dp)
+                                    modifier =
+                                        Modifier
+                                            .align(Alignment.CenterHorizontally)
+                                            .padding(horizontal = 24.dp),
                                 )
                             ViewModelResponseState.Loading ->
                                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                         }
-
                     }
                 }
 
@@ -243,7 +240,6 @@ fun CardsPage(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
 
         when (val cardState = cardsState) {
             is ViewModelResponseState.Idle -> Unit
@@ -273,7 +269,7 @@ fun CardsPage(
                             }
                         }
                     }
-                    when (val metaState = metadataState){
+                    when (val metaState = metadataState) {
                         is ViewModelResponseState.Idle -> Unit
                         is ViewModelResponseState.Success ->
                             CardGridScreen(cardState.content, navController, metaState.content)
@@ -281,9 +277,10 @@ fun CardsPage(
                             Text(
                                 text = "Sorry, we have encountered an error: " + metaState.error,
                                 color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(horizontal = 24.dp)
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(horizontal = 24.dp),
                             )
                         is ViewModelResponseState.Loading ->
                             CircularProgressIndicator()
@@ -293,9 +290,10 @@ fun CardsPage(
                 Text(
                     text = "Sorry, we have encountered an error: " + cardState.error,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(horizontal = 24.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(horizontal = 24.dp),
                 )
             is ViewModelResponseState.Loading ->
                 CircularProgressIndicator()

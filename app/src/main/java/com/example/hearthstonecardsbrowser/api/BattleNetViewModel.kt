@@ -3,8 +3,10 @@ package com.example.hearthstonecardsbrowser.api
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.hearthstonecardsbrowser.Constants.ALL_CLASSES
 import com.example.hearthstonecardsbrowser.Constants.ALL_RARITIES
@@ -25,6 +27,15 @@ import org.json.JSONObject
 import java.io.IOException
 
 class BattleNetViewModel : ViewModel() {
+    var textFilter by mutableStateOf("")
+    var classFilter by mutableStateOf(MetadataItem(-1, ALL_CLASSES, ""))
+    var typeFilter by mutableStateOf(MetadataItem(-1, ALL_TYPES, ""))
+    var rarityFilter by mutableStateOf(MetadataItem(-1, ALL_RARITIES, ""))
+    var sortBy by mutableStateOf(MetadataItem(6, "Name", "name"))
+    var descending by mutableStateOf(false)
+    var isFiltersExpanded by mutableStateOf(false)
+    var page by mutableStateOf(1)
+
     private val _cards = mutableStateOf<List<HearthstoneCard>>(emptyList())
     val cards: State<List<HearthstoneCard>> = _cards
 

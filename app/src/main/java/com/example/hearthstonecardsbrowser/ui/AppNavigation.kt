@@ -1,5 +1,6 @@
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,11 +16,13 @@ import com.example.hearthstonecardsbrowser.ui.CardsPage
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val battleNetViewModel = BattleNetViewModel()
     val cardDetailViewModel = CardDetailViewModel()
 
     NavHost(navController, startDestination = CARD_LIST_NAVIGATION) {
-        composable(CARD_LIST_NAVIGATION) { CardsPage(battleNetViewModel, navController, Modifier) }
+        composable(CARD_LIST_NAVIGATION) { backStackEntry ->
+            val battleNetViewModel: BattleNetViewModel = viewModel(backStackEntry)
+            CardsPage(battleNetViewModel, navController, Modifier)
+        }
         composable(
             route = "$CARD_DETAIL_NAVIGATION/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
